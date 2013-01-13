@@ -22,6 +22,9 @@
 #
 # runlevels: openelec, textmode
 
+[ -f /storage/.config/remote.conf ] && . /storage/.config/remote.conf
+[ "$REMOTE_BACKEND" = "*lirc" ] || exit 0
+
 (
   progress "starting eventlircd"
     mkdir -p /var/run/lirc
