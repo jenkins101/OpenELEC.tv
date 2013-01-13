@@ -1,0 +1,17 @@
+# Here you can include the configuration for the remote and/or
+# transmitter that you have.
+#
+# Feel free to add any custom remotes to this configuration
+# via additional include directives below.
+# OpenELEC include default remote configs under /storage/.config/remotes for 
+# remotes and/or transmitters thats included in the default lirc.
+
+# you can use the irrecord command to generate custom config for your owne remote
+# to blast or use as remote for xbmc.
+
+# if you want to use your remote with xbmc you have to change /storage/.config/remote.conf
+# to lircd insted of eventlirc.
+
+# Configuration for the Windows Media Center Transceivers/Remotes (all) remote:
+#include "/storage/.config/remotes/mceusb/lircd.conf.mceusb"
+
