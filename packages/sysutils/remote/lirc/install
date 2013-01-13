@@ -47,3 +47,8 @@ mkdir -p $INSTALL/usr/bin
 
 mkdir -p $INSTALL/usr/lib
   cp -P $PKG_BUILD/tools/.libs/liblirc_client.so* $INSTALL/usr/lib
+
+mkdir -p $INSTALL/usr/config
+  cp $PKG_DIR/config/lircd.conf.sample $INSTALL/usr/config
+  cp -r $PKG_BUILD/remotes $INSTALL/usr/config/
+
