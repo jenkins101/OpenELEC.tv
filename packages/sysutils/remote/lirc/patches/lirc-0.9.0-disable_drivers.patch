@@ -1,0 +1,15 @@
+--- ./configure.ac	2012-11-29 21:50:50.974125874 +0100
++++ ./configure.ac.orig	2012-12-04 15:19:44.974633059 +0100
+@@ -1451,9 +1451,12 @@
+ 	lirc_atiusb \
+ 	lirc_bt829 \
+ 	lirc_igorplugusb \
++	lirc_imon \
+ 	lirc_parallel \
++	lirc_sasem \
+ 	lirc_serial \
+ 	lirc_sir \
++	lirc_ttusbir \
+ 	lirc_wpc8769l \
+ 	lirc_xbox"
+ fi
