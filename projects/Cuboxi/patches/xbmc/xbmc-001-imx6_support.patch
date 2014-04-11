@@ -1,7 +1,8 @@
-diff -Naur xbmc-gotham-latest.test/configure.in xbmc-imx6-koying.test/configure.in
---- xbmc-gotham-latest.test/configure.in	2014-02-21 23:10:49.246106103 +0100
-+++ xbmc-imx6-koying.test/configure.in	2014-02-21 23:11:24.639122704 +0100
-@@ -558,7 +558,7 @@
+diff --git a/configure.in b/configure.in
+index da57b9b..753a96d 100644
+--- a/configure.in
++++ b/configure.in
+@@ -558,7 +558,7 @@ AC_ARG_ENABLE([gtest],
  
  AC_ARG_ENABLE([codec],
    [AS_HELP_STRING([--enable-codec],
@@ -10,7 +11,23 @@ diff -Naur xbmc-gotham-latest.test/configure.in xbmc-imx6-koying.test/configure.
    [add_codecs=$enableval],
    [add_codecs=no])
  
-@@ -1993,6 +1993,17 @@
+@@ -1034,6 +1034,15 @@ else
+   AC_MSG_RESULT($wayland_disabled)
+ fi
+ 
++# i.MX6
++AC_MSG_CHECKING([for i.MX framebuffer support])
++AC_CHECK_HEADER([linux/mxcfb.h], have_imxfb=yes,have_imxfb=no)
++AC_MSG_RESULT($have_imxfb)
++if test "x$have_imxfb" = "xyes"; then
++  AC_DEFINE([HAS_IMXFB], [1], [Whether i.MX framebuffer support is enabled.])
++  AC_SUBST([USE_IMXFB], 1)
++fi
++
+ # Checks for platforms libraries.
+ if test "$use_gles" = "yes"; then
+   use_gl="no"
+@@ -1991,6 +2000,17 @@ for codecs in `echo $add_codecs | sed 's/,/ /g'`; do
      *libstagefright*)
          XB_ADD_CODEC([LIBSTAGEFRIGHT], [libstagefright], [$codecs])
          ;;
@@ -28,9 +45,10 @@ diff -Naur xbmc-gotham-latest.test/configure.in xbmc-imx6-koying.test/configure.
      *)
    esac
  done
-diff -Naur xbmc-gotham-latest.test/lib/ffmpeg/libavcodec/arm/dca.h xbmc-imx6-koying.test/lib/ffmpeg/libavcodec/arm/dca.h
---- xbmc-gotham-latest.test/lib/ffmpeg/libavcodec/arm/dca.h	2014-02-21 23:10:38.903101147 +0100
-+++ xbmc-imx6-koying.test/lib/ffmpeg/libavcodec/arm/dca.h	2014-02-21 23:11:24.183122503 +0100
+diff --git a/lib/ffmpeg/libavcodec/arm/dca.h b/lib/ffmpeg/libavcodec/arm/dca.h
+index 431b62e..729127a 100644
+--- a/lib/ffmpeg/libavcodec/arm/dca.h
++++ b/lib/ffmpeg/libavcodec/arm/dca.h
 @@ -30,9 +30,9 @@
  
  #define decode_blockcodes decode_blockcodes
@@ -43,15 +61,16 @@ diff -Naur xbmc-gotham-latest.test/lib/ffmpeg/libavcodec/arm/dca.h xbmc-imx6-koy
  
      __asm__ ("smmul   %0,  %6,  %10           \n"
               "smmul   %3,  %7,  %10           \n"
-@@ -101,3 +101,4 @@
+@@ -101,3 +101,4 @@ static inline void int8x8_fmul_int32(float *dst, const int8_t *src, int scale)
  #endif
  
  #endif /* AVCODEC_ARM_DCA_H */
 +
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp xbmc-imx6-koying.test/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
---- xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp	2014-02-21 23:10:30.558097110 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp	2014-02-21 23:11:23.795122326 +0100
-@@ -714,7 +714,10 @@
+diff --git a/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp b/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
+index b48a4fc..8c0bad6 100644
+--- a/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
++++ b/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp
+@@ -720,7 +720,10 @@ void CAESinkALSA::EnumerateDevicesEx(AEDeviceInfoList &list, bool force)
     * will automatically add "@" instead to enable surroundXX mangling.
     * We don't want to do that if "default" can handle multichannel
     * itself (e.g. in case of a pulseaudio server). */
@@ -63,7 +82,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp x
  
    void **hints;
  
-@@ -765,8 +768,8 @@
+@@ -771,8 +774,8 @@ void CAESinkALSA::EnumerateDevicesEx(AEDeviceInfoList &list, bool force)
         * found by the enumeration process. Skip them as well ("hw", "dmix",
         * "plughw", "dsnoop"). */
  
@@ -73,7 +92,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp x
              && baseName != "surround40"
              && baseName != "surround41"
              && baseName != "surround50"
-@@ -875,6 +878,22 @@
+@@ -881,6 +884,22 @@ void CAESinkALSA::EnumerateDevicesEx(AEDeviceInfoList &list, bool force)
  
  AEDeviceType CAESinkALSA::AEDeviceTypeFromName(const std::string &name)
  {
@@ -96,10 +115,11 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Sinks/AESinkALSA.cpp x
    if (name.substr(0, 4) == "hdmi")
      return AE_DEVTYPE_HDMI;
    else if (name.substr(0, 6) == "iec958" || name.substr(0, 5) == "spdif")
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Utils/AEConvert.cpp xbmc-imx6-koying.test/xbmc/cores/AudioEngine/Utils/AEConvert.cpp
---- xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Utils/AEConvert.cpp	2014-02-21 23:10:30.595097127 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/AudioEngine/Utils/AEConvert.cpp	2014-02-21 23:11:23.796122326 +0100
-@@ -841,7 +841,7 @@
+diff --git a/xbmc/cores/AudioEngine/Utils/AEConvert.cpp b/xbmc/cores/AudioEngine/Utils/AEConvert.cpp
+index 711ec04..d113f09 100644
+--- a/xbmc/cores/AudioEngine/Utils/AEConvert.cpp
++++ b/xbmc/cores/AudioEngine/Utils/AEConvert.cpp
+@@ -841,7 +841,7 @@ unsigned int CAEConvert::Float_S24NE4(float *data, const unsigned int samples, u
    _mm_empty();
    #else /* no SSE2 */
    for (uint32_t i = 0; i < samples; ++i)
@@ -108,9 +128,556 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/AudioEngine/Utils/AEConvert.cpp xb
    #endif
  
    return samples << 2;
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp
---- xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp	2014-02-21 23:10:30.378097022 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp	2014-02-21 23:11:23.790122324 +0100
+diff --git a/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp b/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp
+index d251ec8..029c078 100644
+--- a/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp
++++ b/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp
+@@ -75,6 +75,15 @@ static PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
+ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
+ #endif
+ 
++#ifdef HAS_IMXVPU
++#include "windowing/egl/EGLWrapper.h"
++#define GL_VIV_NV12 0x8FC1
++typedef void (GL_APIENTRYP PFNGLTEXDIRECTVIVMAPPROC) (GLenum Target, GLsizei Width, GLsizei Height, GLenum Format, GLvoid ** Logical, const GLuint * Physical);
++typedef void (GL_APIENTRYP PFNGLTEXDIRECTINVALIDATEVIVPROC) (GLenum Target);
++static PFNGLTEXDIRECTVIVMAPPROC glTexDirectVIVMap;
++static PFNGLTEXDIRECTINVALIDATEVIVPROC glTexDirectInvalidateVIV;
++#endif
++
+ #if defined(TARGET_ANDROID)
+ #include "DVDCodecs/Video/DVDVideoCodecAndroidMediaCodec.h"
+ #endif
+@@ -99,6 +108,7 @@ CLinuxRendererGLES::YUVBUFFER::YUVBUFFER()
+ #if defined(TARGET_ANDROID)
+   mediacodec = NULL;
+ #endif
++  codecinfo = NULL;
+ }
+ 
+ CLinuxRendererGLES::YUVBUFFER::~YUVBUFFER()
+@@ -150,6 +160,12 @@ CLinuxRendererGLES::CLinuxRendererGLES()
+   if (!glEGLImageTargetTexture2DOES)
+     glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) CEGLWrapper::GetProcAddress("glEGLImageTargetTexture2DOES");
+ #endif
++#ifdef HAS_IMXVPU
++  if (!glTexDirectVIVMap)
++    glTexDirectVIVMap = (PFNGLTEXDIRECTVIVMAPPROC) CEGLWrapper::GetProcAddress("glTexDirectVIVMap");
++  if (!glTexDirectInvalidateVIV)
++    glTexDirectInvalidateVIV = (PFNGLTEXDIRECTINVALIDATEVIVPROC) CEGLWrapper::GetProcAddress("glTexDirectInvalidateVIV");
++#endif
+ }
+ 
+ CLinuxRendererGLES::~CLinuxRendererGLES()
+@@ -278,6 +294,10 @@ int CLinuxRendererGLES::GetImage(YV12Image *image, int source, bool readonly)
+   {
+     return source;
+   }
++  if ( m_renderMethod & RENDER_IMXMAP )
++  {
++    return source;
++  }
+ 
+ #ifdef HAVE_VIDEOTOOLBOXDECODER
+   if (m_renderMethod & RENDER_CVREF )
+@@ -603,6 +623,10 @@ unsigned int CLinuxRendererGLES::PreInit()
+ #if defined(TARGET_ANDROID)
+   m_formats.push_back(RENDER_FMT_MEDIACODEC);
+ #endif
++  m_formats.push_back(RENDER_FMT_YV12_BUFFER);
++#ifdef HAS_IMXVPU
++  m_formats.push_back(RENDER_FMT_IMXMAP);
++#endif
+ 
+   // setup the background colour
+   m_clearColour = (float)(g_advancedSettings.m_videoBlackBarColour & 0xff) / 0xff;
+@@ -713,6 +737,16 @@ void CLinuxRendererGLES::LoadShaders(int field)
+         m_renderMethod = RENDER_MEDIACODEC;
+         break;
+       }
++      else if (m_format == RENDER_FMT_YV12_BUFFER)
++      {
++        CLog::Log(LOGNOTICE, "GL: Using YV12 Buffer render method");
++      }
++      else if (m_format == RENDER_FMT_IMXMAP)
++      {
++        CLog::Log(LOGNOTICE, "GL: Using IMXMAP render method");
++        m_renderMethod = RENDER_IMXMAP;
++        break;
++      }
+       else if (m_format == RENDER_FMT_BYPASS)
+       {
+         CLog::Log(LOGNOTICE, "GL: Using BYPASS render method");
+@@ -805,6 +839,18 @@ void CLinuxRendererGLES::LoadShaders(int field)
+     m_textureCreate = &CLinuxRendererGLES::CreateNV12Texture;
+     m_textureDelete = &CLinuxRendererGLES::DeleteNV12Texture;
+   }
++  else if (m_format == RENDER_FMT_YV12_BUFFER)
++  {
++    m_textureUpload = &CLinuxRendererGLES::UploadYV12BufferTexture;
++    m_textureCreate = &CLinuxRendererGLES::CreateYV12Texture;
++    m_textureDelete = &CLinuxRendererGLES::DeleteYV12Texture;
++  }
++  else if (m_format == RENDER_FMT_IMXMAP)
++  {
++    m_textureUpload = &CLinuxRendererGLES::UploadIMXMAPTexture;
++    m_textureCreate = &CLinuxRendererGLES::CreateIMXMAPTexture;
++    m_textureDelete = &CLinuxRendererGLES::DeleteIMXMAPTexture;
++  }
+   else
+   {
+     // default to YV12 texture handlers
+@@ -950,6 +996,10 @@ void CLinuxRendererGLES::Render(DWORD flags, int index)
+   {
+     RenderSurfaceTexture(index, m_currentField);
+   }
++  else if (m_renderMethod & RENDER_IMXMAP)
++  {
++    RenderIMXMAPTexture(index, m_currentField);
++  }
+   else
+   {
+     RenderSoftware(index, m_currentField);
+@@ -1154,7 +1204,7 @@ void CLinuxRendererGLES::RenderMultiPass(int index, int field)
+ //    imgwidth  *= planes[0].pixpertex_x;
+ //    imgheight *= planes[0].pixpertex_y;
+ //  }
+-//  
++//
+ //  glBegin(GL_QUADS);
+ //
+ //  glMultiTexCoord2fARB(GL_TEXTURE0, planes[0].rect.x1, planes[0].rect.y1);
+@@ -1576,6 +1626,75 @@ void CLinuxRendererGLES::RenderCoreVideoRef(int index, int field)
+ #endif
+ }
+ 
++void CLinuxRendererGLES::RenderIMXMAPTexture(int index, int field)
++{
++#if defined(HAS_IMXVPU)
++#ifdef DEBUG_VERBOSE
++  unsigned int time = XbmcThreads::SystemClockMillis();
++#endif
++
++  YUVPLANE &plane = m_buffers[index].fields[field][0];
++  CDVDVideoCodecBuffer* codecinfo = m_buffers[index].codecinfo;
++
++  if((codecinfo == NULL) || !codecinfo->IsValid()) return;
++
++  glDisable(GL_DEPTH_TEST);
++
++  glActiveTexture(GL_TEXTURE0);
++  glBindTexture(m_textureTarget, plane.id);
++
++  g_Windowing.EnableGUIShader(SM_TEXTURE_RGBA);
++
++  GLubyte idx[4] = {0, 1, 3, 2};        //determines order of triangle strip
++  GLfloat ver[4][4];
++  GLfloat tex[4][2];
++  GLfloat col[3] = {1.0f, 1.0f, 1.0f};
++
++  GLint   posLoc = g_Windowing.GUIShaderGetPos();
++  GLint   texLoc = g_Windowing.GUIShaderGetCoord0();
++  GLint   colLoc = g_Windowing.GUIShaderGetCol();
++
++  glVertexAttribPointer(posLoc, 4, GL_FLOAT, 0, 0, ver);
++  glVertexAttribPointer(texLoc, 2, GL_FLOAT, 0, 0, tex);
++  glVertexAttribPointer(colLoc, 3, GL_FLOAT, 0, 0, col);
++
++  glEnableVertexAttribArray(posLoc);
++  glEnableVertexAttribArray(texLoc);
++  glEnableVertexAttribArray(colLoc);
++
++  // Set vertex coordinates
++  for(int i = 0; i < 4; i++)
++  {
++    ver[i][0] = m_rotatedDestCoords[i].x;
++    ver[i][1] = m_rotatedDestCoords[i].y;
++    ver[i][2] = 0.0f;// set z to 0
++    ver[i][3] = 1.0f;
++  }
++
++  // Set texture coordinates
++  tex[0][0] = tex[3][0] = plane.rect.x1;
++  tex[0][1] = tex[1][1] = plane.rect.y1;
++  tex[1][0] = tex[2][0] = plane.rect.x2;
++  tex[2][1] = tex[3][1] = plane.rect.y2;
++
++  glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
++
++  glDisableVertexAttribArray(posLoc);
++  glDisableVertexAttribArray(texLoc);
++  glDisableVertexAttribArray(colLoc);
++
++  g_Windowing.DisableGUIShader();
++  VerifyGLState();
++
++  glBindTexture(m_textureTarget, 0);
++  VerifyGLState();
++
++#ifdef DEBUG_VERBOSE
++  CLog::Log(LOGDEBUG, "RenderIMXMAPTexture %d: tm:%d\n", index, XbmcThreads::SystemClockMillis() - time);
++#endif
++#endif
++}
++
+ bool CLinuxRendererGLES::RenderCapture(CRenderCapture* capture)
+ {
+   if (!m_bValidated)
+@@ -2297,7 +2416,7 @@ bool CLinuxRendererGLES::CreateCVRefTexture(int index)
+ 
+   glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+-	// This is necessary for non-power-of-two textures
++        // This is necessary for non-power-of-two textures
+   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+@@ -2403,7 +2522,7 @@ bool CLinuxRendererGLES::CreateEGLIMGTexture(int index)
+ 
+   glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+-	// This is necessary for non-power-of-two textures
++        // This is necessary for non-power-of-two textures
+   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+ 
+@@ -2477,6 +2596,84 @@ bool CLinuxRendererGLES::CreateSurfaceTexture(int index)
+   return true;
+ }
+ 
++//********************************************************************************************************
++// Buffer creation, deletion, copying + clearing
++//********************************************************************************************************
++void CLinuxRendererGLES::UploadYV12BufferTexture(int index)
++{
++  YUVBUFFER& buf    =  m_buffers[index];
++  YV12Image* im     =  &buf.image;
++  YUVFIELDS& fields =  buf.fields;
++
++  if (!buf.codecinfo || !(im->flags & IMAGE_FLAG_READY))
++    return;
++
++  bool deinterlacing;
++  if (m_currentField == FIELD_FULL)
++    deinterlacing = false;
++  else
++    deinterlacing = true;
++
++  glEnable(m_textureTarget);
++  VerifyGLState();
++
++  glPixelStorei(GL_UNPACK_ALIGNMENT,1);
++
++  if (deinterlacing)
++  {
++    // Load Even Y Field
++    LoadPlane( fields[FIELD_TOP][0] , GL_LUMINANCE, buf.flipindex
++        , im->width, im->height >> 1
++                                   , buf.codecinfo->iLineSize[0]*2, im->bpp, buf.codecinfo->data[0] );
++
++    // Load Odd Y fields
++    LoadPlane( fields[FIELD_BOT][0], GL_LUMINANCE, buf.flipindex
++        , im->width, im->height >> 1
++                                   , buf.codecinfo->iLineSize[0]*2, im->bpp, buf.codecinfo->data[0] + buf.codecinfo->iLineSize[0]) ;
++
++    // Load Even U & V Fields
++    LoadPlane( fields[FIELD_TOP][1], GL_LUMINANCE, buf.flipindex
++        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
++                                                   , buf.codecinfo->iLineSize[1]*2, im->bpp, buf.codecinfo->data[1] );
++
++    LoadPlane( fields[FIELD_TOP][2], GL_ALPHA, buf.flipindex
++        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
++                                                   , buf.codecinfo->iLineSize[2]*2, im->bpp, buf.codecinfo->data[2] );
++
++    // Load Odd U & V Fields
++    LoadPlane( fields[FIELD_BOT][1], GL_LUMINANCE, buf.flipindex
++        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
++                                                   , buf.codecinfo->iLineSize[1]*2, im->bpp, buf.codecinfo->data[1] + buf.codecinfo->iLineSize[1] );
++
++    LoadPlane( fields[FIELD_BOT][2], GL_ALPHA, buf.flipindex
++        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
++                                                   , buf.codecinfo->iLineSize[2]*2, im->bpp, buf.codecinfo->data[2] + buf.codecinfo->iLineSize[2] );
++  }
++  else
++  {
++    // Load Y plane
++    LoadPlane( fields[FIELD_FULL][0], GL_LUMINANCE, buf.flipindex
++        , im->width, im->height
++        , buf.codecinfo->iLineSize[0], im->bpp, buf.codecinfo->data[0] );
++
++    //load U plane
++    LoadPlane( fields[FIELD_FULL][1], GL_LUMINANCE, buf.flipindex
++        , im->width >> im->cshift_x, im->height >> im->cshift_y
++                                                   , buf.codecinfo->iLineSize[1], im->bpp, buf.codecinfo->data[1] );
++
++    //load V plane
++    LoadPlane( fields[FIELD_FULL][2], GL_ALPHA, buf.flipindex
++        , im->width >> im->cshift_x, im->height >> im->cshift_y
++                                                   , buf.codecinfo->iLineSize[2], im->bpp, buf.codecinfo->data[2] );
++  }
++
++  VerifyGLState();
++
++  CalculateTextureSourceRects(index, 3);
++
++  glDisable(m_textureTarget);
++}
++
+ void CLinuxRendererGLES::SetTextureFilter(GLenum method)
+ {
+   for (int i = 0 ; i<m_NumYV12Buffers ; i++)
+@@ -2506,6 +2703,83 @@ void CLinuxRendererGLES::SetTextureFilter(GLenum method)
+   }
+ }
+ 
++//********************************************************************************************************
++// IMXMAP creation, deletion, copying + clearing
++//********************************************************************************************************
++void CLinuxRendererGLES::UploadIMXMAPTexture(int index)
++{
++#ifdef HAS_IMXVPU
++  YUVBUFFER& buf    =  m_buffers[index];
++  CDVDVideoCodecBuffer* codecinfo = buf.codecinfo;
++
++  if(codecinfo && codecinfo->IsValid())
++  {
++    YUVPLANE &plane = m_buffers[index].fields[0][0];
++
++    glActiveTexture(GL_TEXTURE0);
++    glBindTexture(m_textureTarget, plane.id);
++
++    GLuint physical = ~0U;
++    GLvoid *virt = (GLvoid*)codecinfo->data[0];
++    glTexDirectVIVMap(m_textureTarget, codecinfo->iWidth, codecinfo->iHeight, GL_VIV_NV12,
++                      (GLvoid **)&virt, &physical);
++    glTexDirectInvalidateVIV(m_textureTarget);
++
++    glBindTexture(m_textureTarget, 0);
++
++    plane.flipindex = m_buffers[index].flipindex;
++    plane.texwidth  = codecinfo->iWidth;
++    plane.texheight = codecinfo->iHeight;
++
++    CalculateTextureSourceRects(index, 1);
++  }
++
++#endif
++}
++void CLinuxRendererGLES::DeleteIMXMAPTexture(int index)
++{
++  YUVBUFFER &buf = m_buffers[index];
++  YUVPLANE &plane = buf.fields[0][0];
++
++  if(plane.id && glIsTexture(plane.id))
++    glDeleteTextures(1, &plane.id);
++  plane.id = 0;
++
++  SAFE_RELEASE(buf.codecinfo);
++}
++bool CLinuxRendererGLES::CreateIMXMAPTexture(int index)
++{
++  YV12Image &im     = m_buffers[index].image;
++  YUVFIELDS &fields = m_buffers[index].fields;
++  YUVPLANE  &plane  = fields[0][0];
++
++  DeleteEGLIMGTexture(index);
++
++  memset(&im    , 0, sizeof(im));
++  memset(&fields, 0, sizeof(fields));
++
++  im.height = m_sourceHeight;
++  im.width  = m_sourceWidth;
++
++  plane.texwidth  = 0; // Must be actual frame width for pseudo-cropping
++  plane.texheight = 0; // Must be actual frame height for pseudo-cropping
++  plane.pixpertex_x = 1;
++  plane.pixpertex_y = 1;
++
++  glEnable(m_textureTarget);
++  glGenTextures(1, &plane.id);
++  VerifyGLState();
++
++  glBindTexture(m_textureTarget, plane.id);
++
++  glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++  glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++
++  glDisable(m_textureTarget);
++  return true;
++}
++
++
+ bool CLinuxRendererGLES::Supports(ERENDERFEATURE feature)
+ {
+   // Player controls render, let it dictate available render features
+@@ -2735,5 +3009,16 @@ void CLinuxRendererGLES::AddProcessor(CDVDMediaCodecInfo *mediacodec, int index)
+ }
+ #endif
+ 
++void CLinuxRendererGLES::AddProcessor(CDVDVideoCodecBuffer *codecinfo, int index)
++{
++  YUVBUFFER &buf = m_buffers[index];
++
++  SAFE_RELEASE(buf.codecinfo);
++  buf.codecinfo = codecinfo;
++
++  if (codecinfo)
++    codecinfo->Lock();
++}
++
+ #endif
+ 
+diff --git a/xbmc/cores/VideoRenderers/LinuxRendererGLES.h b/xbmc/cores/VideoRenderers/LinuxRendererGLES.h
+index 45e9c20..8630d9b 100644
+--- a/xbmc/cores/VideoRenderers/LinuxRendererGLES.h
++++ b/xbmc/cores/VideoRenderers/LinuxRendererGLES.h
+@@ -33,6 +33,7 @@
+ #include "guilib/GraphicContext.h"
+ #include "BaseRenderer.h"
+ #include "xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h"
++#include "xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h"
+ 
+ class CRenderCapture;
+ 
+@@ -89,7 +90,8 @@ enum RenderMethod
+   RENDER_CVREF  = 0x080,
+   RENDER_BYPASS = 0x100,
+   RENDER_EGLIMG = 0x200,
+-  RENDER_MEDIACODEC = 0x400
++  RENDER_MEDIACODEC = 0x400,
++  RENDER_IMXMAP = 0x800
+ };
+ 
+ enum RenderQuality
+@@ -173,6 +175,7 @@ public:
+   // mediaCodec
+   virtual void         AddProcessor(CDVDMediaCodecInfo *mediacodec, int index);
+ #endif
++  virtual void         AddProcessor(CDVDVideoCodecBuffer *codecinfo, int index);
+ 
+ protected:
+   virtual void Render(DWORD flags, int index);
+@@ -212,6 +215,12 @@ protected:
+   void DeleteSurfaceTexture(int index);
+   bool CreateSurfaceTexture(int index);
+ 
++  void UploadYV12BufferTexture(int index);
++
++  void UploadIMXMAPTexture(int index);
++  void DeleteIMXMAPTexture(int index);
++  bool CreateIMXMAPTexture(int index);
++
+   void CalculateTextureSourceRects(int source, int num_planes);
+ 
+   // renderers
+@@ -222,6 +231,7 @@ protected:
+   void RenderEglImage(int index, int field);       // Android OES texture
+   void RenderCoreVideoRef(int index, int field);  // CoreVideo reference
+   void RenderSurfaceTexture(int index, int field);// MediaCodec rendering using SurfaceTexture
++  void RenderIMXMAPTexture(int index, int field); // IMXMAP rendering
+ 
+   CFrameBufferObject m_fbo;
+ 
+@@ -288,6 +298,7 @@ protected:
+     // mediacodec
+     CDVDMediaCodecInfo *mediacodec;
+ #endif
++    CDVDVideoCodecBuffer *codecinfo;
+   };
+ 
+   typedef YUVBUFFER          YUVBUFFERS[NUM_BUFFERS];
+diff --git a/xbmc/cores/VideoRenderers/RenderFormats.h b/xbmc/cores/VideoRenderers/RenderFormats.h
+index f15e80d..714619e 100644
+--- a/xbmc/cores/VideoRenderers/RenderFormats.h
++++ b/xbmc/cores/VideoRenderers/RenderFormats.h
+@@ -37,6 +37,8 @@ enum ERenderFormat {
+   RENDER_FMT_BYPASS,
+   RENDER_FMT_EGLIMG,
+   RENDER_FMT_MEDIACODEC,
++  RENDER_FMT_YV12_BUFFER,
++  RENDER_FMT_IMXMAP,
+ };
+ 
+ #endif
+diff --git a/xbmc/cores/VideoRenderers/RenderManager.cpp b/xbmc/cores/VideoRenderers/RenderManager.cpp
+index a33591d..9a630b8 100644
+--- a/xbmc/cores/VideoRenderers/RenderManager.cpp
++++ b/xbmc/cores/VideoRenderers/RenderManager.cpp
+@@ -928,6 +928,10 @@ int CXBMCRenderManager::AddVideoPicture(DVDVideoPicture& pic)
+   else if(pic.format == RENDER_FMT_MEDIACODEC)
+     m_pRenderer->AddProcessor(pic.mediacodec, index);
+ #endif
++#ifdef HAS_IMXVPU
++  else if(pic.format == RENDER_FMT_YV12_BUFFER || pic.format == RENDER_FMT_IMXMAP)
++    m_pRenderer->AddProcessor(pic.codecinfo, index);
++#endif
+ 
+   m_pRenderer->ReleaseImage(index, false);
+ 
+diff --git a/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp b/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp
+index 21a4ee2..7e82149 100644
+--- a/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp
++++ b/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp
+@@ -39,12 +39,12 @@
+ //
+ // Transformation matrixes for different colorspaces.
+ //
+-static float yuv_coef_bt601[4][4] = 
++static float yuv_coef_bt601[4][4] =
+ {
+     { 1.0f,      1.0f,     1.0f,     0.0f },
+     { 0.0f,     -0.344f,   1.773f,   0.0f },
+     { 1.403f,   -0.714f,   0.0f,     0.0f },
+-    { 0.0f,      0.0f,     0.0f,     0.0f } 
++    { 0.0f,      0.0f,     0.0f,     0.0f }
+ };
+ 
+ static float yuv_coef_bt709[4][4] =
+@@ -55,7 +55,7 @@ static float yuv_coef_bt709[4][4] =
+     { 0.0f,      0.0f,     0.0f,     0.0f }
+ };
+ 
+-static float yuv_coef_ebu[4][4] = 
++static float yuv_coef_ebu[4][4] =
+ {
+     { 1.0f,      1.0f,     1.0f,     0.0f },
+     { 0.0f,     -0.3960f,  2.029f,   0.0f },
+@@ -74,19 +74,19 @@ static float yuv_coef_smtp240m[4][4] =
+ static float** PickYUVConversionMatrix(unsigned flags)
+ {
+   // Pick the matrix.
+-   
++
+    switch(CONF_FLAGS_YUVCOEF_MASK(flags))
+    {
+      case CONF_FLAGS_YUVCOEF_240M:
+        return (float**)yuv_coef_smtp240m; break;
+      case CONF_FLAGS_YUVCOEF_BT709:
+        return (float**)yuv_coef_bt709; break;
+-     case CONF_FLAGS_YUVCOEF_BT601:    
++     case CONF_FLAGS_YUVCOEF_BT601:
+        return (float**)yuv_coef_bt601; break;
+      case CONF_FLAGS_YUVCOEF_EBU:
+        return (float**)yuv_coef_ebu; break;
+    }
+-   
++
+    return (float**)yuv_coef_bt601;
+ }
+ 
+@@ -228,7 +228,7 @@ BaseYUV2RGBGLSLShader::BaseYUV2RGBGLSLShader(bool rect, unsigned flags, ERenderF
+   m_hProj   = -1;
+   m_hModel  = -1;
+   m_hAlpha  = -1;
+-  if (m_format == RENDER_FMT_YUV420P)
++  if (m_format == RENDER_FMT_YUV420P || m_format == RENDER_FMT_YV12_BUFFER)
+     m_defines += "#define XBMC_YV12\n";
+   else if (m_format == RENDER_FMT_NV12)
+     m_defines += "#define XBMC_NV12\n";
+diff --git a/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp b/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp
+index a7445d3..d6c341b 100644
+--- a/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp
++++ b/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCodec.cpp
 @@ -35,6 +35,9 @@
  #include "Video/DVDVideoCodecFFmpeg.h"
  #include "Video/DVDVideoCodecOpenMax.h"
@@ -121,7 +688,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCode
  #include "Video/DVDVideoCodecStageFright.h"
  #if defined(HAVE_LIBCRYSTALHD)
  #include "Video/DVDVideoCodecCrystalHD.h"
-@@ -191,7 +194,11 @@
+@@ -191,7 +194,11 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec(CDVDStreamInfo &hint, unsigne
  #elif defined(TARGET_POSIX) && !defined(TARGET_DARWIN)
    hwSupport += "VAAPI:no ";
  #endif
@@ -134,7 +701,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCode
    CLog::Log(LOGDEBUG, "CDVDFactoryCodec: compiled in hardware support: %s", hwSupport.c_str());
  #if defined(HAS_LIBAMCODEC)
    // amcodec can handle dvd playback.
-@@ -205,6 +212,15 @@
+@@ -205,6 +212,15 @@ CDVDVideoCodec* CDVDFactoryCodec::CreateVideoCodec(CDVDStreamInfo &hint, unsigne
      }
    }
  
@@ -150,9 +717,10 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/DVDFactoryCode
  #if defined(TARGET_DARWIN_OSX)
    if (!hint.software && CSettings::Get().GetBool("videoplayer.usevda"))
    {
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h
---- xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h	2014-02-21 23:10:30.397097031 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h	2014-02-21 23:11:23.790122324 +0100
+diff --git a/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h
+index f6751f4..2ee8211 100644
+--- a/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h
++++ b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h
 @@ -27,6 +27,7 @@
  #include <vector>
  #include <string>
@@ -161,7 +729,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
  
  struct DVDCodecAvailableType 
  {
-@@ -91,6 +92,11 @@
+@@ -91,6 +92,11 @@ struct DVDVideoPicture
      struct {
        CDVDMediaCodecInfo *mediacodec;
      };
@@ -173,11 +741,13 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
    };
  
    unsigned int iFlags;
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.cpp xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.cpp
---- xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.cpp	2014-02-21 23:11:23.790122324 +0100
-@@ -0,0 +1,950 @@
-+/* 
+diff --git a/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.cpp b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.cpp
+new file mode 100644
+index 0000000..a6f3712
+--- /dev/null
++++ b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.cpp
+@@ -0,0 +1,1417 @@
++/*
 + *      Copyright (C) 2010-2013 Team XBMC
 + *      http://www.xbmc.org
 + *
@@ -197,15 +767,16 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 + *
 + */
 +
-+#include <linux/mxcfb.h>
 +#include "DVDVideoCodecIMX.h"
 +
-+#include <linux/mxc_v4l2.h>
 +#include <sys/stat.h>
++#include <string.h>
 +#include <fcntl.h>
 +#include <sys/ioctl.h>
 +#include <unistd.h>
 +#include <sys/mman.h>
++#include <linux/mxcfb.h>
++#include <linux/ipu.h>
 +#include "threads/SingleLock.h"
 +#include "utils/log.h"
 +#include "DVDClock.h"
@@ -217,17 +788,19 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +#define MEDIAINFO 1
 +#define _4CC(c1,c2,c3,c4) (((uint32_t)(c4)<<24)|((uint32_t)(c3)<<16)|((uint32_t)(c2)<<8)|(uint32_t)(c1))
 +#define Align(ptr,align)  (((unsigned int)ptr + (align) - 1)/(align)*(align))
-+#define min(a, b) (a<b)?a:b
 +
-+#define IMX_MAX_QUEUE_SIZE 1
++// Extrace physical and virtual addresses from CDVDVideoCodecBuffer pointers
++#define GET_PHYS_ADDR(buf) (buf)->data[1]
++#define GET_VIRT_ADDR(buf) (buf)->data[0]
++
 +// Experiments show that we need at least one more (+1) V4L buffer than the min value returned by the VPU
-+const int CDVDVideoCodecIMX::m_extraVpuBuffers = IMX_MAX_QUEUE_SIZE + 6;
++const int CDVDVideoCodecIMX::m_extraVpuBuffers = 6;
 +CCriticalSection CDVDVideoCodecIMX::m_codecBufferLock;
 +
 +bool CDVDVideoCodecIMX::VpuAllocBuffers(VpuMemInfo *pMemBlock)
 +{
 +  int i, size;
-+  unsigned char * ptr;
++  void* ptr;
 +  VpuMemDesc vpuMem;
 +  VpuDecRetCode ret;
 +
@@ -236,7 +809,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +    size = pMemBlock->MemSubBlock[i].nAlignment + pMemBlock->MemSubBlock[i].nSize;
 +    if (pMemBlock->MemSubBlock[i].MemType == VPU_MEM_VIRT)
 +    { // Allocate standard virtual memory
-+      ptr = (unsigned char *)malloc(size);
++      ptr = malloc(size);
 +      if(ptr == NULL)
 +      {
 +        CLog::Log(LOGERROR, "%s - Unable to malloc %d bytes.\n", __FUNCTION__, size);
@@ -244,8 +817,9 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +      }
 +      pMemBlock->MemSubBlock[i].pVirtAddr = (unsigned char*)Align(ptr, pMemBlock->MemSubBlock[i].nAlignment);
 +
-+      m_decMemInfo.virtMem[m_decMemInfo.nVirtNum] = (unsigned int)ptr;
 +      m_decMemInfo.nVirtNum++;
++      m_decMemInfo.virtMem = (void**)realloc(m_decMemInfo.virtMem, m_decMemInfo.nVirtNum*sizeof(void*));
++      m_decMemInfo.virtMem[m_decMemInfo.nVirtNum-1] = ptr;
 +    }
 +    else
 +    { // Allocate contigous mem for DMA
@@ -259,11 +833,12 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +      pMemBlock->MemSubBlock[i].pVirtAddr = (unsigned char*)Align(vpuMem.nVirtAddr, pMemBlock->MemSubBlock[i].nAlignment);
 +      pMemBlock->MemSubBlock[i].pPhyAddr = (unsigned char*)Align(vpuMem.nPhyAddr, pMemBlock->MemSubBlock[i].nAlignment);
 +
-+      m_decMemInfo.phyMem_phyAddr[m_decMemInfo.nPhyNum] = (unsigned int)vpuMem.nPhyAddr;
-+      m_decMemInfo.phyMem_virtAddr[m_decMemInfo.nPhyNum] = (unsigned int)vpuMem.nVirtAddr;
-+      m_decMemInfo.phyMem_cpuAddr[m_decMemInfo.nPhyNum] = (unsigned int)vpuMem.nCpuAddr;
-+      m_decMemInfo.phyMem_size[m_decMemInfo.nPhyNum] = size;
 +      m_decMemInfo.nPhyNum++;
++      m_decMemInfo.phyMem = (VpuMemDesc*)realloc(m_decMemInfo.phyMem, m_decMemInfo.nPhyNum*sizeof(VpuMemDesc));
++      m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nPhyAddr = vpuMem.nPhyAddr;
++      m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nVirtAddr = vpuMem.nVirtAddr;
++      m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nCpuAddr = vpuMem.nCpuAddr;
++      m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nSize = size;
 +    }
 +  }
 +
@@ -290,29 +865,39 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  VpuDecRetCode vpuRet;
 +  bool ret = true;
 +
-+  //free virtual mem
-+  for(int i=0; i<m_decMemInfo.nVirtNum; i++)
++  if (m_decMemInfo.virtMem)
 +  {
-+    if (m_decMemInfo.virtMem[i])
-+      free((void*)m_decMemInfo.virtMem[i]);
-+  }
-+  m_decMemInfo.nVirtNum = 0;
-+
-+  //free physical mem
-+  for(int i=0; i<m_decMemInfo.nPhyNum; i++)
-+  {
-+    vpuMem.nPhyAddr = m_decMemInfo.phyMem_phyAddr[i];
-+    vpuMem.nVirtAddr = m_decMemInfo.phyMem_virtAddr[i];
-+    vpuMem.nCpuAddr = m_decMemInfo.phyMem_cpuAddr[i];
-+    vpuMem.nSize = m_decMemInfo.phyMem_size[i];
-+    vpuRet = VPU_DecFreeMem(&vpuMem);
-+    if(vpuRet != VPU_DEC_RET_SUCCESS)
++    //free virtual mem
++    for(int i=0; i<m_decMemInfo.nVirtNum; i++)
 +    {
-+      CLog::Log(LOGERROR, "%s - Errror while trying to free physical memory (%d).\n", __FUNCTION__, ret);
-+      ret = false;
++      if (m_decMemInfo.virtMem[i])
++        free((void*)m_decMemInfo.virtMem[i]);
 +    }
++    free(m_decMemInfo.virtMem);
++    m_decMemInfo.virtMem = NULL;
++    m_decMemInfo.nVirtNum = 0;
 +  }
-+  m_decMemInfo.nPhyNum = 0;
++
++  if (m_decMemInfo.phyMem)
++  {
++    //free physical mem
++    for(int i=0; i<m_decMemInfo.nPhyNum; i++)
++    {
++      vpuMem.nPhyAddr = m_decMemInfo.phyMem[i].nPhyAddr;
++      vpuMem.nVirtAddr = m_decMemInfo.phyMem[i].nVirtAddr;
++      vpuMem.nCpuAddr = m_decMemInfo.phyMem[i].nCpuAddr;
++      vpuMem.nSize = m_decMemInfo.phyMem[i].nSize;
++      vpuRet = VPU_DecFreeMem(&vpuMem);
++      if(vpuRet != VPU_DEC_RET_SUCCESS)
++      {
++        CLog::Log(LOGERROR, "%s - Errror while trying to free physical memory (%d).\n", __FUNCTION__, ret);
++        ret = false;
++      }
++    }
++    free(m_decMemInfo.phyMem);
++    m_decMemInfo.phyMem = NULL;
++    m_decMemInfo.nPhyNum = 0;
++  }
 +
 +  return ret;
 +}
@@ -436,11 +1021,12 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +    }
 +
 +    //record memory info for release
-+    m_decMemInfo.phyMem_phyAddr[m_decMemInfo.nPhyNum]=vpuMem.nPhyAddr;
-+    m_decMemInfo.phyMem_virtAddr[m_decMemInfo.nPhyNum]=vpuMem.nVirtAddr;
-+    m_decMemInfo.phyMem_cpuAddr[m_decMemInfo.nPhyNum]=vpuMem.nCpuAddr;
-+    m_decMemInfo.phyMem_size[m_decMemInfo.nPhyNum]=vpuMem.nSize;
 +    m_decMemInfo.nPhyNum++;
++    m_decMemInfo.phyMem = (VpuMemDesc*)realloc(m_decMemInfo.phyMem, m_decMemInfo.nPhyNum*sizeof(VpuMemDesc));
++    m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nPhyAddr = vpuMem.nPhyAddr;
++    m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nVirtAddr = vpuMem.nVirtAddr;
++    m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nCpuAddr = vpuMem.nCpuAddr;
++    m_decMemInfo.phyMem[m_decMemInfo.nPhyNum-1].nSize = vpuMem.nSize;
 +
 +    //fill frameBuf
 +    ptr=(unsigned char*)vpuMem.nPhyAddr;
@@ -482,14 +1068,32 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +#endif
 +  }
 +
++  if (m_initInfo.nInterlace && (m_modeDeinterlace>0))
++  {
++    if ((m_initInfo.nPicWidth>1024) || (m_initInfo.nPicHeight>1024))
++    {
++      CLog::Log(LOGNOTICE, "IMX: Disable hardware deinterlacing for HD playback\n");
++      m_modeDeinterlace = 0;
++    }
++    else
++    {
++      CLog::Log(LOGNOTICE, "IMX: Enable hardware deinterlacing\n");
++      if (!m_deinterlacer.Init(m_initInfo.nPicWidth, m_initInfo.nPicHeight, GetAllowedReferences()+1, nAlign))
++      {
++        CLog::Log(LOGWARNING, "IMX: Failed to initialize IPU buffers: deinterlacing disabled\n");
++        m_modeDeinterlace = 0;
++      }
++    }
++  }
++  else
++    m_modeDeinterlace = 0;
++
 +  return true;
 +}
 +
 +CDVDVideoCodecIMX::CDVDVideoCodecIMX()
 +{
-+  m_vpuHandle = 0;
 +  m_pFormatName = "iMX-xxx";
-+  memset(&m_decMemInfo, 0, sizeof(DecMemInfo));
 +  m_vpuHandle = 0;
 +  m_vpuFrameBuffers = NULL;
 +  m_outputBuffers = NULL;
@@ -503,8 +1107,14 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  {
 +    m_usePTS = false;
 +  }
++  m_modeDeinterlace = 1; // Default is high motion if requested
++  const char *deintEntry = getenv("IMX_DEINT_MOTION");
++  if (deintEntry != NULL)
++    m_modeDeinterlace = atoi(deintEntry);
 +  m_converter = NULL;
 +  m_convert_bitstream = false;
++  m_bytesToBeConsumed = 0;
++  m_previousPts = DVD_NOPTS_VALUE;
 +}
 +
 +CDVDVideoCodecIMX::~CDVDVideoCodecIMX()
@@ -665,9 +1275,8 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +    m_vpuHandle = 0;
 +  }
 +
-+  // Clear pts queue
-+  while(!m_pts.empty())
-+    m_pts.pop();
++  m_frameCounter = 0;
++  m_deinterlacer.Close();
 +
 +  // Clear memory
 +  if (m_outputBuffers != NULL)
@@ -712,6 +1321,8 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  int demuxer_bytes = iSize;
 +  uint8_t *demuxer_content = pData;
 +  bool retry = false;
++  bool frameConsumed = false;
++  int idx;
 +
 +#ifdef IMX_PROFILE
 +  static unsigned long long previous, current;
@@ -748,9 +1359,10 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  ((unsigned int *)pData)[0] = htonl(iSize-4);
 +*/
 +
-+  if (pData && iSize)
++  if ((pData && iSize) ||
++     (m_bytesToBeConsumed))
 +  {
-+    if (m_convert_bitstream)
++    if ((m_convert_bitstream) && (iSize))
 +    {
 +      // convert demuxer packet from bitstream to bytestream (AnnexB)
 +      if (m_converter->Convert(demuxer_content, demuxer_bytes))
@@ -760,14 +1372,6 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +      }
 +      else
 +        CLog::Log(LOGERROR,"%s - bitstream_convert error", __FUNCTION__);
-+    }
-+
-+    if (m_usePTS)
-+    {        
-+      if (pts != DVD_NOPTS_VALUE)
-+        m_pts.push(-pts);
-+      else if (dts !=  DVD_NOPTS_VALUE)
-+        m_pts.push(-dts);
 +    }
 +
 +    inData.nSize = demuxer_bytes;
@@ -793,6 +1397,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +#ifdef IMX_PROFILE
 +      before_dec = XbmcThreads::SystemClockMillis();
 +#endif
++      m_bytesToBeConsumed += inData.nSize;
 +      ret = VPU_DecDecodeBuf(m_vpuHandle, &inData, &decRet);
 +#ifdef IMX_PROFILE
 +        CLog::Log(LOGDEBUG, "%s - VPU dec 0x%x decode takes : %lld\n\n", __FUNCTION__, decRet,  XbmcThreads::SystemClockMillis() - before_dec);
@@ -840,11 +1445,32 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +      {
 +        ret = VPU_DecGetConsumedFrameInfo(m_vpuHandle, &frameLengthInfo);
 +        if (ret != VPU_DEC_RET_SUCCESS)
++        {
 +          CLog::Log(LOGERROR, "%s - VPU error retireving info about consummed frame (%d).\n", __FUNCTION__, ret);
++        }
++        m_bytesToBeConsumed -= (frameLengthInfo.nFrameLength + frameLengthInfo.nStuffLength);
++        if (frameLengthInfo.pFrame)
++        {
++          idx = VpuFindBuffer(frameLengthInfo.pFrame->pbufY);
++          if (m_bytesToBeConsumed < 50)
++            m_bytesToBeConsumed = 0;
++          if (idx != -1)
++          {
++            if (m_previousPts != DVD_NOPTS_VALUE)
++            {
++              m_outputBuffers[idx]->SetPts(m_previousPts);
++              m_previousPts = DVD_NOPTS_VALUE;
++            }
++            else
++              m_outputBuffers[idx]->SetPts(pts);
++          }
++          else
++            CLog::Log(LOGERROR, "%s - could not find frame buffer\n", __FUNCTION__);
++        }
++        frameConsumed = true;
 +      } //VPU_DEC_ONE_FRM_CONSUMED
 +
-+      if ((decRet & VPU_DEC_OUTPUT_DIS) ||
-+          (decRet & VPU_DEC_OUTPUT_MOSAIC_DIS))
++      if (decRet & VPU_DEC_OUTPUT_DIS)
 +      // Frame ready to be displayed
 +      {
 +        if (retStatus & VC_PICTURE)
@@ -856,8 +1482,34 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +          CLog::Log(LOGERROR, "%s - VPU Cannot get output frame(%d).\n", __FUNCTION__, ret);
 +          goto out_error;
 +        }
++
++        // Some codecs (VC1?) lie about their frame size (mod 16). Adjust...
++        m_frameInfo.pExtInfo->nFrmWidth  = (((m_frameInfo.pExtInfo->nFrmWidth) + 15) & ~15);
++        m_frameInfo.pExtInfo->nFrmHeight = (((m_frameInfo.pExtInfo->nFrmHeight) + 15) & ~15);
++
 +        retStatus |= VC_PICTURE;
 +      } //VPU_DEC_OUTPUT_DIS
++
++      // According to libfslvpuwrap: If this flag is set then the frame should
++      // be dropped. It is just returned to gather decoder information but not
++      // for display.
++      if (decRet & VPU_DEC_OUTPUT_MOSAIC_DIS)
++      {
++        ret = VPU_DecGetOutputFrame(m_vpuHandle, &m_frameInfo);
++        if(ret != VPU_DEC_RET_SUCCESS)
++        {
++          CLog::Log(LOGERROR, "%s - VPU Cannot get output frame(%d).\n", __FUNCTION__, ret);
++          goto out_error;
++        }
++
++        // Display frame
++        ret = VPU_DecOutFrameDisplayed(m_vpuHandle, m_frameInfo.pDisplayFrameBuf);
++        if(ret != VPU_DEC_RET_SUCCESS)
++        {
++          CLog::Log(LOGERROR, "%s: VPU Clear frame display failure(%d)\n",__FUNCTION__,ret);
++          goto out_error;
++        }
++      } //VPU_DEC_OUTPUT_MOSAIC_DIS
 +
 +      if (decRet & VPU_DEC_OUTPUT_REPEAT)
 +      {
@@ -878,11 +1530,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +      if (decRet & VPU_DEC_FLUSH)
 +      {
 +        CLog::Log(LOGNOTICE, "%s - VPU requires a flush.\n", __FUNCTION__);
-+        ret = VPU_DecFlushAll(m_vpuHandle);
-+        if (ret != VPU_DEC_RET_SUCCESS)
-+        {
-+          CLog::Log(LOGERROR, "%s - VPU flush failed(%d).\n", __FUNCTION__, ret);
-+        }
++        Reset();
 +        retStatus = VC_FLUSHED;
 +      }
 +      if (decRet & VPU_DEC_OUTPUT_EOS)
@@ -909,13 +1557,27 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +        inData.nSize = 0;
 +        retry = true;
 +      }
-+
 +    } while (retry == true);
 +  } //(pData && iSize)
 +
 +  if (retStatus == 0)
 +  {
 +    retStatus |= VC_BUFFER;
++  }
++
++  if (m_bytesToBeConsumed > 0)
++  {
++    // Remember the current pts because the data which has just
++    // been sent to the VPU has not yet been consumed.
++    // This pts is related to the frame that will be consumed
++    // at next call...
++    m_previousPts = pts;
++    if (retStatus & VC_PICTURE)
++      // If a picture was produced and some data are still to
++      // be consumed, do not ask for additional buffer as
++      // we likely already have enough data to produce a
++      // new output frame at next call
++      retStatus &= (~VC_BUFFER);
 +  }
 +
 +#ifdef IMX_PROFILE
@@ -933,13 +1595,14 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +
 +  CLog::Log(LOGDEBUG, "%s - called\n", __FUNCTION__);
 +
-+  // Clear pts queue
-+  while(!m_pts.empty())
-+    m_pts.pop();
-+
 +  // Invalidate all buffers
 +  for(int i=0; i < m_vpuFrameBufferNum; i++)
 +    m_outputBuffers[i]->ReleaseFramebuffer(&m_vpuHandle);
++
++  m_frameCounter = 0;
++  m_deinterlacer.Reset();
++  m_bytesToBeConsumed = 0;
++  m_previousPts = DVD_NOPTS_VALUE;
 +
 +  // Flush VPU
 +  ret = VPU_DecFlushAll(m_vpuHandle);
@@ -967,6 +1630,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +
 +bool CDVDVideoCodecIMX::GetPicture(DVDVideoPicture* pDvdVideoPicture)
 +{
++  m_frameCounter++;
 +  pDvdVideoPicture->iFlags = DVP_FLAG_ALLOCATED;
 +  if (m_dropState)
 +    pDvdVideoPicture->iFlags |= DVP_FLAG_DROPPED;
@@ -974,7 +1638,6 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +    pDvdVideoPicture->iFlags &= ~DVP_FLAG_DROPPED;
 +
 +  pDvdVideoPicture->format = RENDER_FMT_IMXMAP;
-+  pDvdVideoPicture->pts = DVD_NOPTS_VALUE;
 +  pDvdVideoPicture->dts = DVD_NOPTS_VALUE;
 +  pDvdVideoPicture->iWidth = m_frameInfo.pExtInfo->FrmCropRect.nRight - m_frameInfo.pExtInfo->FrmCropRect.nLeft;
 +  pDvdVideoPicture->iHeight = m_frameInfo.pExtInfo->FrmCropRect.nBottom - m_frameInfo.pExtInfo->FrmCropRect.nTop;
@@ -986,30 +1649,28 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  if (idx != -1)
 +  {
 +    CDVDVideoCodecIMXBuffer *buffer = m_outputBuffers[idx];
-+    if (m_usePTS)
++    CDVDVideoCodecIPUBuffer *ipuBuffer = NULL;
++
++    pDvdVideoPicture->pts = buffer->GetPts();
++    if (!m_usePTS)
 +    {
-+      if (m_pts.size())
-+      {
-+        pDvdVideoPicture->pts = -m_pts.top();
-+        m_pts.pop();
-+      }
-+      else
-+        CLog::Log(LOGERROR, "%s - logic error: no PTS available", __FUNCTION__);
++      pDvdVideoPicture->pts = DVD_NOPTS_VALUE;
 +    }
 +
-+    buffer->Queue(m_frameInfo.pDisplayFrameBuf);
-+    pDvdVideoPicture->codecinfo = buffer;
++    buffer->Queue(&m_frameInfo);
 +
 +#ifdef TRACE_FRAMES
-+    CLog::Log(LOGDEBUG, "+  %02d\n", idx);
-+    CLog::Log(LOGDEBUG, "pts %f\n",pDvdVideoPicture->pts);
++    CLog::Log(LOGDEBUG, "+  %02d  pts %f  (VPU)\n", idx, pDvdVideoPicture->pts);
 +#endif
 +
++    ipuBuffer = m_deinterlacer.Process(buffer, m_frameInfo.eFieldType, m_modeDeinterlace > 1);
++
++    if (ipuBuffer)
++      pDvdVideoPicture->codecinfo = ipuBuffer;
++    else
++      pDvdVideoPicture->codecinfo = buffer;
++
 +    pDvdVideoPicture->codecinfo->Lock();
-+    pDvdVideoPicture->codecinfo->iWidth = m_frameInfo.pExtInfo->nFrmWidth;
-+    pDvdVideoPicture->codecinfo->iHeight = m_frameInfo.pExtInfo->nFrmHeight;
-+    pDvdVideoPicture->codecinfo->data[0] = m_frameInfo.pDisplayFrameBuf->pbufVirtY;
-+    pDvdVideoPicture->codecinfo->data[1] = m_frameInfo.pDisplayFrameBuf->pbufY;
 +  }
 +  else
 +  {
@@ -1029,7 +1690,9 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  if (m_dropState != bDrop)
 +  {
 +    m_dropState = bDrop;
-+    CLog::Log(LOGNOTICE, "%s : %d\n", __FUNCTION__, bDrop);
++#ifdef TRACE_FRAMES
++    CLog::Log(LOGDEBUG, "%s : %d\n", __FUNCTION__, bDrop);
++#endif
 +  }
 +}
 +
@@ -1045,6 +1708,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +#endif
 +  , m_frameBuffer(NULL)
 +  , m_rendered(false)
++  , m_pts(DVD_NOPTS_VALUE)
 +{
 +}
 +
@@ -1052,7 +1716,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +{
 +#ifdef TRACE_FRAMES
 +  long count = AtomicIncrement(&m_refs);
-+  CLog::Log(LOGDEBUG, "R+ %02d  -  ref : %d\n", m_idx, count);
++  CLog::Log(LOGDEBUG, "R+ %02d  -  ref : %d  (VPU)\n", m_idx, count);
 +#else
 +  AtomicIncrement(&m_refs);
 +#endif
@@ -1062,24 +1726,22 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +{
 +  long count = AtomicDecrement(&m_refs);
 +#ifdef TRACE_FRAMES
-+  CLog::Log(LOGDEBUG, "R- %02d  -  ref : %d\n", m_idx, count);
++  CLog::Log(LOGDEBUG, "R- %02d  -  ref : %d  (VPU)\n", m_idx, count);
 +#endif
 +  if (count == 1)
 +  {
 +    // If count drops to 1 then the only reference is being held by the codec
 +    // that it can be released in the next Decode call.
 +    if(m_frameBuffer != NULL)
++    {
 +      m_rendered = true;
 +#ifdef TRACE_FRAMES
-+    CLog::Log(LOGDEBUG, "R  %02d\n", m_idx);
++      CLog::Log(LOGDEBUG, "R  %02d  (VPU)\n", m_idx);
 +#endif
++    }
 +  }
 +  else if (count == 0)
 +  {
-+#ifdef TRACE_FRAMES
-+    CLog::Log(LOGDEBUG, "~  %02d\n", m_idx);
-+#endif
-+
 +    delete this;
 +  }
 +
@@ -1092,16 +1754,21 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  return m_frameBuffer != NULL;
 +}
 +
-+bool CDVDVideoCodecIMXBuffer::Rendered()
++bool CDVDVideoCodecIMXBuffer::Rendered() const
 +{
 +  return m_rendered;
 +}
 +
-+void CDVDVideoCodecIMXBuffer::Queue(VpuFrameBuffer *buffer)
++void CDVDVideoCodecIMXBuffer::Queue(VpuDecOutFrameInfo *frameInfo)
 +{
 +  CSingleLock lock(CDVDVideoCodecIMX::m_codecBufferLock);
-+  m_frameBuffer = buffer;
++  m_frameBuffer = frameInfo->pDisplayFrameBuf;
 +  m_rendered = false;
++
++  iWidth  = frameInfo->pExtInfo->nFrmWidth;
++  iHeight = frameInfo->pExtInfo->nFrmHeight;
++  GET_VIRT_ADDR(this) = m_frameBuffer->pbufVirtY;
++  GET_PHYS_ADDR(this) = m_frameBuffer->pbufY;
 +}
 +
 +VpuDecRetCode CDVDVideoCodecIMXBuffer::ReleaseFramebuffer(VpuDecHandle *handle)
@@ -1116,21 +1783,393 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +      CLog::Log(LOGERROR, "%s: vpu clear frame display failure: ret=%d \r\n",__FUNCTION__,ret);
 +  }
 +#ifdef TRACE_FRAMES
-+  CLog::Log(LOGDEBUG, "-  %02d\n", m_idx);
++  CLog::Log(LOGDEBUG, "-  %02d  (VPU)\n", m_idx);
 +#endif
 +  m_rendered = false;
 +  m_frameBuffer = NULL;
++  m_pts = DVD_NOPTS_VALUE;
 +  return ret;
++}
++
++void CDVDVideoCodecIMXBuffer::SetPts(double pts)
++{
++  m_pts = pts;
++}
++
++double CDVDVideoCodecIMXBuffer::GetPts(void) const
++{
++  return m_pts;
 +}
 +
 +CDVDVideoCodecIMXBuffer::~CDVDVideoCodecIMXBuffer()
 +{
 +  assert(m_refs == 0);
++#ifdef TRACE_FRAMES
++  CLog::Log(LOGDEBUG, "~  %02d  (VPU)\n", m_idx);
++#endif
 +}
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.h xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.h
---- xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.h	1970-01-01 01:00:00.000000000 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.h	2014-02-21 23:11:23.791122324 +0100
-@@ -0,0 +1,129 @@
++
++#ifdef TRACE_FRAMES
++CDVDVideoCodecIPUBuffer::CDVDVideoCodecIPUBuffer(int idx)
++  : m_refs(1)
++  , m_idx(idx)
++#else
++CDVDVideoCodecIPUBuffer::CDVDVideoCodecIPUBuffer()
++  : m_refs(1)
++#endif
++  , m_source(NULL)
++  , m_pPhyAddr(NULL)
++  , m_pVirtAddr(NULL)
++  , m_nSize(0)
++{
++}
++
++CDVDVideoCodecIPUBuffer::~CDVDVideoCodecIPUBuffer()
++{
++  assert(m_refs == 0);
++#ifdef TRACE_FRAMES
++  CLog::Log(LOGDEBUG, "~  %02d  (IPU)\n", m_idx);
++#endif
++}
++
++void CDVDVideoCodecIPUBuffer::Lock()
++{
++#ifdef TRACE_FRAMES
++  long count = AtomicIncrement(&m_refs);
++  CLog::Log(LOGDEBUG, "R+ %02d  -  ref : %d  (IPU)\n", m_idx, count);
++#else
++  AtomicIncrement(&m_refs);
++#endif
++
++}
++
++long CDVDVideoCodecIPUBuffer::Release()
++{
++  long count = AtomicDecrement(&m_refs);
++#ifdef TRACE_FRAMES
++  CLog::Log(LOGDEBUG, "R- %02d  -  ref : %d  (IPU)\n", m_idx, count);
++#endif
++  if (count == 1)
++  {
++    ReleaseFrameBuffer();
++  }
++  else if (count == 0)
++  {
++    delete this;
++  }
++
++  return count;
++}
++
++bool CDVDVideoCodecIPUBuffer::IsValid()
++{
++  CSingleLock lock(CDVDVideoCodecIMX::m_codecBufferLock);
++  return (m_source != NULL) && m_pPhyAddr;
++}
++
++bool CDVDVideoCodecIPUBuffer::Process(int fd, CDVDVideoCodecBuffer *currentBuffer,
++                                      CDVDVideoCodecBuffer *previousBuffer, VpuFieldType fieldType)
++{
++  struct ipu_task task;
++  memset(&task, 0, sizeof(task));
++  task.priority = IPU_TASK_PRIORITY_HIGH;
++
++  SAFE_RELEASE(m_source);
++
++  iWidth                 = currentBuffer->iWidth;
++  iHeight                = currentBuffer->iHeight;
++
++  // Input is the VPU decoded frame
++  task.input.width       = iWidth;
++  task.input.height      = iHeight;
++  task.input.format      = IPU_PIX_FMT_NV12;
++  task.input.paddr       = (int)GET_PHYS_ADDR(currentBuffer);
++
++  // Output is our IPU buffer
++  task.output.width      = iWidth;
++  task.output.height     = iHeight;
++  task.output.format     = IPU_PIX_FMT_NV12;
++  task.output.paddr      = (int)GET_PHYS_ADDR(this);
++
++  // Fill previous buffer address
++  if (previousBuffer)
++    task.input.paddr_n = (int)GET_PHYS_ADDR(previousBuffer);
++
++  task.input.deinterlace.enable    = 1;
++  task.input.deinterlace.motion    = task.input.paddr_n?LOW_MOTION:HIGH_MOTION;
++
++  switch (fieldType)
++  {
++  case VPU_FIELD_TOP:
++    task.input.deinterlace.field_fmt = IPU_DEINTERLACE_FIELD_TOP;
++    break;
++  case VPU_FIELD_BOTTOM:
++    task.input.deinterlace.field_fmt = IPU_DEINTERLACE_FIELD_BOTTOM;
++    break;
++  /*
++  case VPU_FIELD_TB:
++    task.input.deinterlace.field_fmt = IPU_DEINTERLACE_FIELD_TOP;
++    break;
++  case VPU_FIELD_BT:
++    task.input.deinterlace.field_fmt = IPU_DEINTERLACE_FIELD_BOTTOM;
++    break;
++  */
++  default:
++    break;
++  }
++
++  int ret = ioctl(fd, IPU_QUEUE_TASK, &task);
++  if (ret < 0)
++  {
++    CLog::Log(LOGERROR, "IPU task failed: %s\n", strerror(errno));
++    return false;
++  }
++
++  currentBuffer->Lock();
++
++  // Remember the source buffer. This is actually not necessary since the output
++  // buffer is the one that is used by the renderer. But keep it bound for now
++  // since this state is used in IsValid which then needs to become a flag in
++  // this class.
++  m_source = currentBuffer;
++  m_source->Lock();
++
++  currentBuffer->Release();
++
++  return true;
++}
++
++void CDVDVideoCodecIPUBuffer::ReleaseFrameBuffer()
++{
++#ifdef TRACE_FRAMES
++  CLog::Log(LOGDEBUG, "-  %02d  (IPU)\n", m_idx);
++#endif
++  CSingleLock lock(CDVDVideoCodecIMX::m_codecBufferLock);
++  SAFE_RELEASE(m_source);
++}
++
++bool CDVDVideoCodecIPUBuffer::Allocate(int fd, int width, int height, int nAlign)
++{
++  uint8_t *phyAddr, *virtAddr;
++  m_iWidth = Align(width,FRAME_ALIGN);
++  m_iHeight = Align(height,(2*FRAME_ALIGN));
++  // NV12 == 12 bpp
++  m_nSize = m_iWidth*m_iHeight*12/8;
++  m_pPhyAddr = m_nSize;
++
++  GET_PHYS_ADDR(this) = GET_VIRT_ADDR(this) = NULL;
++
++  int r = ioctl(fd, IPU_ALLOC, &m_pPhyAddr);
++  if (r < 0)
++  {
++    m_pPhyAddr = 0;
++    CLog::Log(LOGERROR, "ioctl IPU_ALLOC fail: disable deinterlacing: %s\n", strerror(errno));
++    return false;
++  }
++
++  CLog::Log(LOGNOTICE, "IPU: alloc %d bytes for frame of %dx%d at 0x%x\n",
++            m_nSize, m_iWidth, m_iHeight, m_pPhyAddr);
++
++  m_pVirtAddr = (uint8_t*)mmap(0, m_nSize, PROT_READ | PROT_WRITE, MAP_SHARED,
++                               fd, m_pPhyAddr);
++  if (!m_pVirtAddr)
++  {
++    CLog::Log(LOGERROR, "IPU mmap failed: disable deinterlacing: %s\n", strerror(errno));
++    return false;
++  }
++
++  if (nAlign>1)
++  {
++    GET_PHYS_ADDR(this) = (uint8_t*)Align(m_pPhyAddr, nAlign);
++    GET_VIRT_ADDR(this) = (uint8_t*)Align(m_pVirtAddr, nAlign);
++  }
++  else
++  {
++    GET_PHYS_ADDR(this) = (uint8_t*)m_pPhyAddr;
++    GET_VIRT_ADDR(this) = (uint8_t*)m_pVirtAddr;
++  }
++
++  return true;
++}
++
++bool CDVDVideoCodecIPUBuffer::Free(int fd)
++{
++  CSingleLock lock(CDVDVideoCodecIMX::m_codecBufferLock);
++  bool ret = true;
++
++  // Unmap virtual memory
++  if (m_pVirtAddr != NULL)
++  {
++    if(munmap(m_pVirtAddr, m_nSize))
++    {
++      CLog::Log(LOGERROR, "IPU unmap failed: %s\n", strerror(errno));
++      ret = false;
++    }
++
++    m_pVirtAddr = NULL;
++  }
++
++  // Free IPU memory
++  if (m_pPhyAddr)
++  {
++    if (ioctl(fd, IPU_FREE, &m_pPhyAddr))
++    {
++      CLog::Log(LOGERROR, "IPU free buffer 0x%x failed: %s\n",
++                m_pPhyAddr, strerror(errno));
++      ret = false;
++    }
++
++    m_pPhyAddr = 0;
++  }
++
++  GET_PHYS_ADDR(this) = GET_VIRT_ADDR(this) = NULL;
++  SAFE_RELEASE(m_source);
++
++  return ret;
++}
++
++CDVDVideoCodecIPUBuffers::CDVDVideoCodecIPUBuffers()
++  : m_ipuHandle(0)
++  , m_bufferNum(0)
++  , m_buffers(NULL)
++  , m_lastBuffer(NULL)
++{
++}
++
++CDVDVideoCodecIPUBuffers::~CDVDVideoCodecIPUBuffers()
++{
++  Close();
++}
++
++bool CDVDVideoCodecIPUBuffers::Init(int width, int height, int numBuffers, int nAlign)
++{
++  if (numBuffers<=0)
++  {
++    CLog::Log(LOGERROR, "IPU Init: invalid number of buffers: %d\n", numBuffers);
++    return false;
++  }
++
++  m_ipuHandle = open("/dev/mxc_ipu", O_RDWR, 0);
++  if (m_ipuHandle<=0)
++  {
++    CLog::Log(LOGWARNING, "Failed to initialize IPU: deinterlacing disabled: %s\n",
++              strerror(errno));
++    m_ipuHandle = 0;
++    return false;
++  }
++
++  m_bufferNum = numBuffers;
++  m_buffers = new CDVDVideoCodecIPUBuffer*[m_bufferNum];
++
++  for (int i=0; i < m_bufferNum; i++ )
++  {
++#ifdef TRACE_FRAMES
++    m_buffers[i] = new CDVDVideoCodecIPUBuffer(i);
++#else
++    m_buffers[i] = new CDVDVideoCodecIPUBuffer;
++#endif
++    if (!m_buffers[i]->Allocate(m_ipuHandle, width, height, nAlign))
++    {
++      Close();
++      return false;
++    }
++  }
++
++  return true;
++}
++
++bool CDVDVideoCodecIPUBuffers::Reset()
++{
++  SAFE_RELEASE(m_lastBuffer);
++  for (int i=0; i < m_bufferNum; i++)
++    m_buffers[i]->ReleaseFrameBuffer();
++}
++
++bool CDVDVideoCodecIPUBuffers::Close()
++{
++  bool ret = true;
++
++  if (m_ipuHandle)
++  {
++    for (int i=0; i < m_bufferNum; i++)
++    {
++      if (m_buffers[i] == NULL ) continue;
++      if (!m_buffers[i]->Free(m_ipuHandle))
++        ret = false;
++    }
++
++    // Close IPU device
++    if (close(m_ipuHandle))
++    {
++      CLog::Log(LOGERROR, "IPU failed to close interface: %s\n", strerror(errno));
++      ret = false;
++    }
++
++    m_ipuHandle = 0;
++  }
++
++  if (m_buffers)
++  {
++    for (int i=0; i < m_bufferNum; i++)
++      SAFE_RELEASE(m_buffers[i]);
++
++    delete m_buffers;
++    m_buffers = NULL;
++  }
++
++  m_bufferNum = 0;
++  SAFE_RELEASE(m_lastBuffer);
++  return true;
++}
++
++CDVDVideoCodecIPUBuffer *
++CDVDVideoCodecIPUBuffers::Process(CDVDVideoCodecBuffer *sourceBuffer,
++                                  VpuFieldType fieldType, bool lowMotion)
++{
++  CDVDVideoCodecIPUBuffer *target = NULL;
++  bool ret = true;
++
++  if (!m_bufferNum || (fieldType==VPU_FIELD_NONE)) return NULL;
++
++  for (int i=0; i < m_bufferNum; i++ )
++  {
++    if (!m_buffers[i]->Rendered()) continue;
++
++    // IPU process:
++    // SRC: Current VPU physical buffer address + last VPU buffer address
++    // DST: IPU buffer[i]
++    CDVDVideoCodecBuffer *last = lowMotion?m_lastBuffer:NULL;
++    ret = m_buffers[i]->Process(m_ipuHandle, sourceBuffer, last, fieldType);
++    if (ret)
++    {
++#ifdef TRACE_FRAMES
++      CLog::Log(LOGDEBUG, "+  %02d  (IPU)\n", i);
++#endif
++      target = m_buffers[i];
++    }
++    break;
++  }
++
++  // Buffers are there but there is no free one, this is an error!
++  // Rendering will continue with unprocessed frames ...
++  if (ret && target==NULL)
++  {
++    CLog::Log(LOGERROR, "Deinterlacing: did not find free buffer, forward unprocessed frame\n");
++  }
++
++  SAFE_RELEASE(m_lastBuffer);
++  m_lastBuffer = sourceBuffer;
++  if (m_lastBuffer != NULL)
++    m_lastBuffer->Lock();
++
++  return target;
++}
+diff --git a/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.h b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.h
+new file mode 100644
+index 0000000..1cfb2a4
+--- /dev/null
++++ b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecIMX.h
+@@ -0,0 +1,204 @@
 +#pragma once
 +/*
 + *      Copyright (C) 2010-2013 Team XBMC
@@ -1152,7 +2191,6 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 + *
 + */
 +#include <queue>
-+#include <linux/videodev2.h>
 +#include <imx-mm/vpu/vpu_wrapper.h>
 +#include "DVDVideoCodec.h"
 +#include "DVDStreamInfo.h"
@@ -1160,26 +2198,30 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +#include "threads/CriticalSection.h"
 +#include "utils/BitstreamConverter.h"
 +
-+#include <queue>
 +
 +//#define IMX_PROFILE
 +//#define TRACE_FRAMES
 +
-+// FIXME TODO Develop real proper CVPUBuffer class
-+#define VPU_DEC_MAX_NUM_MEM_NUM 20
-+typedef struct
++class CDecMemInfo
 +{
++public:
++  CDecMemInfo()
++    : nVirtNum(0)
++    , virtMem(NULL)
++    , nPhyNum(0)
++    , phyMem(NULL)
++  {}
++
 +  //virtual mem info
 +  int nVirtNum;
-+  unsigned int virtMem[VPU_DEC_MAX_NUM_MEM_NUM];
++  void** virtMem;
 +
 +  //phy mem info
 +  int nPhyNum;
-+  unsigned int phyMem_virtAddr[VPU_DEC_MAX_NUM_MEM_NUM];
-+  unsigned int phyMem_phyAddr[VPU_DEC_MAX_NUM_MEM_NUM];
-+  unsigned int phyMem_cpuAddr[VPU_DEC_MAX_NUM_MEM_NUM];
-+  unsigned int phyMem_size[VPU_DEC_MAX_NUM_MEM_NUM];
-+} DecMemInfo;
++  VpuMemDesc* phyMem;
++};
++
++class CDVDVideoCodecIPUBuffer;
 +
 +class CDVDVideoCodecIMXBuffer : public CDVDVideoCodecBuffer
 +{
@@ -1191,29 +2233,98 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +#endif
 +
 +  // reference counting
-+  virtual void       Lock();
-+  virtual long       Release();
-+  virtual bool       IsValid();
++  virtual void             Lock();
++  virtual long             Release();
++  virtual bool             IsValid();
 +
-+  bool               Rendered();
-+  void               Queue(VpuFrameBuffer *buffer);
-+  VpuDecRetCode      ReleaseFramebuffer(VpuDecHandle *handle);
++  bool                     Rendered() const;
++  void                     Queue(VpuDecOutFrameInfo *frameInfo);
++  VpuDecRetCode            ReleaseFramebuffer(VpuDecHandle *handle);
++  void                     SetPts(double pts);
++  double                   GetPts(void) const;
 +
 +protected:
 +  // private because we are reference counted
-+  virtual            ~CDVDVideoCodecIMXBuffer();
++  virtual                  ~CDVDVideoCodecIMXBuffer();
 +
 +#ifdef TRACE_FRAMES
-+  int                 m_idx;
++  int                      m_idx;
 +#endif
-+  long                m_refs;
-+  VpuFrameBuffer     *m_frameBuffer;
-+  bool                m_rendered;
++  long                     m_refs;
++  VpuFrameBuffer          *m_frameBuffer;
++  bool                     m_rendered;
++  double                   m_pts;
 +};
++
++// Shared buffer that holds an IPU allocated memory block and serves as target
++// for IPU operations such as deinterlacing, rotation or color conversion.
++class CDVDVideoCodecIPUBuffer : public CDVDVideoCodecBuffer
++{
++public:
++#ifdef TRACE_FRAMES
++  CDVDVideoCodecIPUBuffer(int idx);
++#else
++  CDVDVideoCodecIPUBuffer();
++#endif
++
++  // reference counting
++  virtual void             Lock();
++  virtual long             Release();
++  virtual bool             IsValid();
++
++  // Returns whether the buffer is ready to be used
++  bool                     Rendered() const { return m_source == NULL; }
++  bool                     Process(int fd, CDVDVideoCodecBuffer *currentBuffer,
++                                   CDVDVideoCodecBuffer *previousBuffer, VpuFieldType fieldType);
++  void                     ReleaseFrameBuffer();
++
++  bool                     Allocate(int fd, int width, int height, int nAlign);
++  bool                     Free(int fd);
++
++private:
++  virtual                  ~CDVDVideoCodecIPUBuffer();
++
++private:
++#ifdef TRACE_FRAMES
++  int                      m_idx;
++#endif
++  long                     m_refs;
++  CDVDVideoCodecBuffer    *m_source;
++  int                      m_pPhyAddr;
++  uint8_t                 *m_pVirtAddr;
++  int                      m_iWidth;
++  int                      m_iHeight;
++  int                      m_nSize;
++};
++
++// Collection class that manages a pool of IPU buffers that are used for
++// deinterlacing. In future they can also serve rotation or color conversion
++// buffers.
++class CDVDVideoCodecIPUBuffers
++{
++  public:
++    CDVDVideoCodecIPUBuffers();
++    ~CDVDVideoCodecIPUBuffers();
++
++    bool Init(int width, int height, int numBuffers, int nAlign);
++    bool Reset();
++    bool Close();
++
++    CDVDVideoCodecIPUBuffer *Process(CDVDVideoCodecBuffer *sourceBuffer,
++                                     VpuFieldType fieldType, bool lowMotion);
++
++  private:
++    int                       m_ipuHandle;
++    int                       m_bufferNum;
++    CDVDVideoCodecIPUBuffer **m_buffers;
++    CDVDVideoCodecBuffer     *m_lastBuffer;
++};
++
 +
 +class CDVDVideoCodecIMX : public CDVDVideoCodec
 +{
 +  friend class CDVDVideoCodecIMXBuffer;
++  friend class CDVDVideoCodecIPUBuffer;
 +
 +public:
 +  CDVDVideoCodecIMX();
@@ -1232,10 +2343,10 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +
 +protected:
 +
-+  bool VpuOpen(void);
++  bool VpuOpen();
 +  bool VpuAllocBuffers(VpuMemInfo *);
-+  bool VpuFreeBuffers(void);
-+  bool VpuAllocFrameBuffers(void);
++  bool VpuFreeBuffers();
++  bool VpuAllocFrameBuffers();
 +  int  VpuFindBuffer(void *frameAddr);
 +
 +  static const int    m_extraVpuBuffers;   // Number of additional buffers for VPU
@@ -1244,25 +2355,30 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +  CDVDStreamInfo      m_hints;             // Hints from demuxer at stream opening
 +  const char         *m_pFormatName;       // Current decoder format name
 +  VpuDecOpenParam     m_decOpenParam;      // Parameters required to call VPU_DecOpen
-+  DecMemInfo          m_decMemInfo;        // VPU dedicated memory description
++  CDecMemInfo         m_decMemInfo;        // VPU dedicated memory description
 +  VpuDecHandle        m_vpuHandle;         // Handle for VPU library calls
 +  VpuDecInitInfo      m_initInfo;          // Initial info returned from VPU at decoding start
 +  bool                m_dropState;         // Current drop state
 +  int                 m_vpuFrameBufferNum; // Total number of allocated frame buffers
 +  VpuFrameBuffer     *m_vpuFrameBuffers;   // Table of VPU frame buffers description
++  CDVDVideoCodecIPUBuffers  m_deinterlacer;
 +  CDVDVideoCodecIMXBuffer **m_outputBuffers;
 +  VpuMemDesc         *m_extraMem;          // Table of allocated extra Memory
 +//  VpuMemDesc         *m_outputBuffers;     // Table of buffers out of VPU (used to call properly VPU_DecOutFrameDisplayed)
 +  int                 m_frameCounter;      // Decoded frames counter
 +  bool                m_usePTS;            // State whether pts out of decoding process should be used
-+  std::priority_queue<double>         m_pts;
++  int                 m_modeDeinterlace;   // Deinterlacer mode: 0=off, 1=high, 2..=low
 +  VpuDecOutFrameInfo  m_frameInfo;
 +  CBitstreamConverter *m_converter;
 +  bool                m_convert_bitstream;
++  int                 m_bytesToBeConsumed; // Remaining bytes in VPU
++  double              m_previousPts;       // Enable to keep pts when needed
 +};
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h
---- xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h	1970-01-01 01:00:00.000000000 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h	2014-02-21 23:11:23.791122324 +0100
+diff --git a/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h
+new file mode 100644
+index 0000000..6096bf4
+--- /dev/null
++++ b/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h
 @@ -0,0 +1,38 @@
 +/*
 + *      Copyright (C) 2010-2013 Team XBMC
@@ -1302,10 +2418,11 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideo
 +};
 +
 +#endif // DVDVIDEOCODECINFO_H
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in
---- xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in	2014-02-21 23:10:30.382097024 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in	2014-02-21 23:11:23.790122324 +0100
-@@ -24,6 +24,9 @@
+diff --git a/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in b/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in
+index 8a97889..d019a91 100644
+--- a/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in
++++ b/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile.in
+@@ -24,6 +24,9 @@ SRCS += OpenMax.cpp
  SRCS += OpenMaxVideo.cpp
  SRCS += DVDVideoCodecOpenMax.cpp
  endif
@@ -1315,10 +2432,11 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDCodecs/Video/Makefile
  ifeq (@USE_LIBAMCODEC@,1)
  SRCS += AMLCodec.cpp
  SRCS += DVDVideoCodecAmlogic.cpp
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp
---- xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp	2014-02-21 23:10:30.530097095 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp	2014-02-21 23:11:23.794122325 +0100
-@@ -995,6 +995,8 @@
+diff --git a/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp b/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp
+index 99b3155..7a03b4f 100644
+--- a/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp
++++ b/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp
+@@ -995,6 +995,8 @@ static std::string GetRenderFormatName(ERenderFormat format)
      case RENDER_FMT_EGLIMG:    return "EGLIMG";
      case RENDER_FMT_BYPASS:    return "BYPASS";
      case RENDER_FMT_MEDIACODEC:return "MEDIACODEC";
@@ -1327,548 +2445,11 @@ diff -Naur xbmc-gotham-latest.test/xbmc/cores/dvdplayer/DVDPlayerVideo.cpp xbmc-
      case RENDER_FMT_NONE:      return "NONE";
    }
    return "UNKNOWN";
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp
---- xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp	2014-02-21 23:10:30.329096998 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.cpp	2014-02-21 23:11:23.788122322 +0100
-@@ -76,6 +76,15 @@
- static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
- #endif
- 
-+#ifdef HAS_IMXVPU
-+#include "windowing/egl/EGLWrapper.h"
-+#define GL_VIV_NV12 0x8FC1
-+typedef void (GL_APIENTRYP PFNGLTEXDIRECTVIVMAPPROC) (GLenum Target, GLsizei Width, GLsizei Height, GLenum Format, GLvoid ** Logical, const GLuint * Physical);
-+typedef void (GL_APIENTRYP PFNGLTEXDIRECTINVALIDATEVIVPROC) (GLenum Target);
-+static PFNGLTEXDIRECTVIVMAPPROC glTexDirectVIVMap;
-+static PFNGLTEXDIRECTINVALIDATEVIVPROC glTexDirectInvalidateVIV;
-+#endif
-+
- #if defined(TARGET_ANDROID)
- #include "DVDCodecs/Video/DVDVideoCodecAndroidMediaCodec.h"
- #endif
-@@ -100,6 +109,7 @@
- #if defined(TARGET_ANDROID)
-   mediacodec = NULL;
- #endif
-+  codecinfo = NULL;
- }
- 
- CLinuxRendererGLES::YUVBUFFER::~YUVBUFFER()
-@@ -151,6 +161,12 @@
-   if (!glEGLImageTargetTexture2DOES)
-     glEGLImageTargetTexture2DOES = (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) CEGLWrapper::GetProcAddress("glEGLImageTargetTexture2DOES");
- #endif
-+#ifdef HAS_IMXVPU
-+  if (!glTexDirectVIVMap)
-+    glTexDirectVIVMap = (PFNGLTEXDIRECTVIVMAPPROC) CEGLWrapper::GetProcAddress("glTexDirectVIVMap");
-+  if (!glTexDirectInvalidateVIV)
-+    glTexDirectInvalidateVIV = (PFNGLTEXDIRECTINVALIDATEVIVPROC) CEGLWrapper::GetProcAddress("glTexDirectInvalidateVIV");
-+#endif
- }
- 
- CLinuxRendererGLES::~CLinuxRendererGLES()
-@@ -279,6 +295,10 @@
-   {
-     return source;
-   }
-+  if ( m_renderMethod & RENDER_IMXMAP )
-+  {
-+    return source;
-+  }
- 
- #ifdef HAVE_VIDEOTOOLBOXDECODER
-   if (m_renderMethod & RENDER_CVREF )
-@@ -604,6 +624,10 @@
- #if defined(TARGET_ANDROID)
-   m_formats.push_back(RENDER_FMT_MEDIACODEC);
- #endif
-+  m_formats.push_back(RENDER_FMT_YV12_BUFFER);
-+#ifdef HAS_IMXVPU
-+  m_formats.push_back(RENDER_FMT_IMXMAP);
-+#endif
- 
-   // setup the background colour
-   m_clearColour = (float)(g_advancedSettings.m_videoBlackBarColour & 0xff) / 0xff;
-@@ -715,6 +739,16 @@
-         m_renderMethod = RENDER_MEDIACODEC;
-         break;
-       }
-+      else if (m_format == RENDER_FMT_YV12_BUFFER)
-+      {
-+        CLog::Log(LOGNOTICE, "GL: Using YV12 Buffer render method");
-+      }
-+      else if (m_format == RENDER_FMT_IMXMAP)
-+      {
-+        CLog::Log(LOGNOTICE, "GL: Using IMXMAP render method");
-+        m_renderMethod = RENDER_IMXMAP;
-+        break;
-+      }
-       else if (m_format == RENDER_FMT_BYPASS)
-       {
-         CLog::Log(LOGNOTICE, "GL: Using BYPASS render method");
-@@ -807,6 +841,18 @@
-     m_textureCreate = &CLinuxRendererGLES::CreateNV12Texture;
-     m_textureDelete = &CLinuxRendererGLES::DeleteNV12Texture;
-   }
-+  else if (m_format == RENDER_FMT_YV12_BUFFER)
-+  {
-+    m_textureUpload = &CLinuxRendererGLES::UploadYV12BufferTexture;
-+    m_textureCreate = &CLinuxRendererGLES::CreateYV12Texture;
-+    m_textureDelete = &CLinuxRendererGLES::DeleteYV12Texture;
-+  }
-+  else if (m_format == RENDER_FMT_IMXMAP)
-+  {
-+    m_textureUpload = &CLinuxRendererGLES::UploadIMXMAPTexture;
-+    m_textureCreate = &CLinuxRendererGLES::CreateIMXMAPTexture;
-+    m_textureDelete = &CLinuxRendererGLES::DeleteIMXMAPTexture;
-+  }
-   else
-   {
-     // default to YV12 texture handlers
-@@ -952,6 +998,10 @@
-   {
-     RenderSurfaceTexture(index, m_currentField);
-   }
-+  else if (m_renderMethod & RENDER_IMXMAP)
-+  {
-+    RenderIMXMAPTexture(index, m_currentField);
-+  }
-   else
-   {
-     RenderSoftware(index, m_currentField);
-@@ -1156,7 +1206,7 @@
- //    imgwidth  *= planes[0].pixpertex_x;
- //    imgheight *= planes[0].pixpertex_y;
- //  }
--//  
-+//
- //  glBegin(GL_QUADS);
- //
- //  glMultiTexCoord2fARB(GL_TEXTURE0, planes[0].rect.x1, planes[0].rect.y1);
-@@ -1578,6 +1628,75 @@
- #endif
- }
- 
-+void CLinuxRendererGLES::RenderIMXMAPTexture(int index, int field)
-+{
-+#if defined(HAS_IMXVPU)
-+#ifdef DEBUG_VERBOSE
-+  unsigned int time = XbmcThreads::SystemClockMillis();
-+#endif
-+
-+  YUVPLANE &plane = m_buffers[index].fields[field][0];
-+  CDVDVideoCodecBuffer* codecinfo = m_buffers[index].codecinfo;
-+
-+  if((codecinfo == NULL) || !codecinfo->IsValid()) return;
-+
-+  glDisable(GL_DEPTH_TEST);
-+
-+  glActiveTexture(GL_TEXTURE0);
-+  glBindTexture(m_textureTarget, plane.id);
-+
-+  g_Windowing.EnableGUIShader(SM_TEXTURE_RGBA);
-+
-+  GLubyte idx[4] = {0, 1, 3, 2};        //determines order of triangle strip
-+  GLfloat ver[4][4];
-+  GLfloat tex[4][2];
-+  GLfloat col[3] = {1.0f, 1.0f, 1.0f};
-+
-+  GLint   posLoc = g_Windowing.GUIShaderGetPos();
-+  GLint   texLoc = g_Windowing.GUIShaderGetCoord0();
-+  GLint   colLoc = g_Windowing.GUIShaderGetCol();
-+
-+  glVertexAttribPointer(posLoc, 4, GL_FLOAT, 0, 0, ver);
-+  glVertexAttribPointer(texLoc, 2, GL_FLOAT, 0, 0, tex);
-+  glVertexAttribPointer(colLoc, 3, GL_FLOAT, 0, 0, col);
-+
-+  glEnableVertexAttribArray(posLoc);
-+  glEnableVertexAttribArray(texLoc);
-+  glEnableVertexAttribArray(colLoc);
-+
-+  // Set vertex coordinates
-+  for(int i = 0; i < 4; i++)
-+  {
-+    ver[i][0] = m_rotatedDestCoords[i].x;
-+    ver[i][1] = m_rotatedDestCoords[i].y;
-+    ver[i][2] = 0.0f;// set z to 0
-+    ver[i][3] = 1.0f;
-+  }
-+
-+  // Set texture coordinates
-+  tex[0][0] = tex[3][0] = plane.rect.x1;
-+  tex[0][1] = tex[1][1] = plane.rect.y1;
-+  tex[1][0] = tex[2][0] = plane.rect.x2;
-+  tex[2][1] = tex[3][1] = plane.rect.y2;
-+
-+  glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
-+
-+  glDisableVertexAttribArray(posLoc);
-+  glDisableVertexAttribArray(texLoc);
-+  glDisableVertexAttribArray(colLoc);
-+
-+  g_Windowing.DisableGUIShader();
-+  VerifyGLState();
-+
-+  glBindTexture(m_textureTarget, 0);
-+  VerifyGLState();
-+
-+#ifdef DEBUG_VERBOSE
-+  CLog::Log(LOGDEBUG, "RenderIMXMAPTexture %d: tm:%d\n", index, XbmcThreads::SystemClockMillis() - time);
-+#endif
-+#endif
-+}
-+
- bool CLinuxRendererGLES::RenderCapture(CRenderCapture* capture)
- {
-   if (!m_bValidated)
-@@ -2299,7 +2418,7 @@
- 
-   glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
--	// This is necessary for non-power-of-two textures
-+        // This is necessary for non-power-of-two textures
-   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-@@ -2405,7 +2524,7 @@
- 
-   glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
--	// This is necessary for non-power-of-two textures
-+        // This is necessary for non-power-of-two textures
-   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(m_textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
- 
-@@ -2479,6 +2598,84 @@
-   return true;
- }
- 
-+//********************************************************************************************************
-+// Buffer creation, deletion, copying + clearing
-+//********************************************************************************************************
-+void CLinuxRendererGLES::UploadYV12BufferTexture(int index)
-+{
-+  YUVBUFFER& buf    =  m_buffers[index];
-+  YV12Image* im     =  &buf.image;
-+  YUVFIELDS& fields =  buf.fields;
-+
-+  if (!buf.codecinfo || !(im->flags & IMAGE_FLAG_READY))
-+    return;
-+
-+  bool deinterlacing;
-+  if (m_currentField == FIELD_FULL)
-+    deinterlacing = false;
-+  else
-+    deinterlacing = true;
-+
-+  glEnable(m_textureTarget);
-+  VerifyGLState();
-+
-+  glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-+
-+  if (deinterlacing)
-+  {
-+    // Load Even Y Field
-+    LoadPlane( fields[FIELD_TOP][0] , GL_LUMINANCE, buf.flipindex
-+        , im->width, im->height >> 1
-+                                   , buf.codecinfo->iLineSize[0]*2, im->bpp, buf.codecinfo->data[0] );
-+
-+    // Load Odd Y fields
-+    LoadPlane( fields[FIELD_BOT][0], GL_LUMINANCE, buf.flipindex
-+        , im->width, im->height >> 1
-+                                   , buf.codecinfo->iLineSize[0]*2, im->bpp, buf.codecinfo->data[0] + buf.codecinfo->iLineSize[0]) ;
-+
-+    // Load Even U & V Fields
-+    LoadPlane( fields[FIELD_TOP][1], GL_LUMINANCE, buf.flipindex
-+        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
-+                                                   , buf.codecinfo->iLineSize[1]*2, im->bpp, buf.codecinfo->data[1] );
-+
-+    LoadPlane( fields[FIELD_TOP][2], GL_ALPHA, buf.flipindex
-+        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
-+                                                   , buf.codecinfo->iLineSize[2]*2, im->bpp, buf.codecinfo->data[2] );
-+
-+    // Load Odd U & V Fields
-+    LoadPlane( fields[FIELD_BOT][1], GL_LUMINANCE, buf.flipindex
-+        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
-+                                                   , buf.codecinfo->iLineSize[1]*2, im->bpp, buf.codecinfo->data[1] + buf.codecinfo->iLineSize[1] );
-+
-+    LoadPlane( fields[FIELD_BOT][2], GL_ALPHA, buf.flipindex
-+        , im->width >> im->cshift_x, im->height >> (im->cshift_y + 1)
-+                                                   , buf.codecinfo->iLineSize[2]*2, im->bpp, buf.codecinfo->data[2] + buf.codecinfo->iLineSize[2] );
-+  }
-+  else
-+  {
-+    // Load Y plane
-+    LoadPlane( fields[FIELD_FULL][0], GL_LUMINANCE, buf.flipindex
-+        , im->width, im->height
-+        , buf.codecinfo->iLineSize[0], im->bpp, buf.codecinfo->data[0] );
-+
-+    //load U plane
-+    LoadPlane( fields[FIELD_FULL][1], GL_LUMINANCE, buf.flipindex
-+        , im->width >> im->cshift_x, im->height >> im->cshift_y
-+                                                   , buf.codecinfo->iLineSize[1], im->bpp, buf.codecinfo->data[1] );
-+
-+    //load V plane
-+    LoadPlane( fields[FIELD_FULL][2], GL_ALPHA, buf.flipindex
-+        , im->width >> im->cshift_x, im->height >> im->cshift_y
-+                                                   , buf.codecinfo->iLineSize[2], im->bpp, buf.codecinfo->data[2] );
-+  }
-+
-+  VerifyGLState();
-+
-+  CalculateTextureSourceRects(index, 3);
-+
-+  glDisable(m_textureTarget);
-+}
-+
- void CLinuxRendererGLES::SetTextureFilter(GLenum method)
- {
-   for (int i = 0 ; i<m_NumYV12Buffers ; i++)
-@@ -2508,6 +2705,82 @@
-   }
- }
- 
-+//********************************************************************************************************
-+// IMXMAP creation, deletion, copying + clearing
-+//********************************************************************************************************
-+void CLinuxRendererGLES::UploadIMXMAPTexture(int index)
-+{
-+#ifdef HAS_IMXVPU
-+  YUVBUFFER& buf    =  m_buffers[index];
-+  CDVDVideoCodecBuffer* codecinfo = buf.codecinfo;
-+
-+  if(codecinfo && codecinfo->IsValid())
-+  {
-+    YUVPLANE &plane = m_buffers[index].fields[0][0];
-+
-+    glActiveTexture(GL_TEXTURE0);
-+    glBindTexture(m_textureTarget, plane.id);
-+
-+    GLuint physical = ~0U;
-+    glTexDirectVIVMap(m_textureTarget, codecinfo->iWidth, codecinfo->iHeight, GL_VIV_NV12,
-+                      (GLvoid **)(&codecinfo->data[0]), &physical);
-+    glTexDirectInvalidateVIV(m_textureTarget);
-+
-+    glBindTexture(m_textureTarget, 0);
-+
-+    plane.flipindex = m_buffers[index].flipindex;
-+    plane.texwidth  = codecinfo->iWidth;
-+    plane.texheight = codecinfo->iHeight;
-+
-+    CalculateTextureSourceRects(index, 1);
-+  }
-+
-+#endif
-+}
-+void CLinuxRendererGLES::DeleteIMXMAPTexture(int index)
-+{
-+  YUVBUFFER &buf = m_buffers[index];
-+  YUVPLANE &plane = buf.fields[0][0];
-+
-+  if(plane.id && glIsTexture(plane.id))
-+    glDeleteTextures(1, &plane.id);
-+  plane.id = 0;
-+
-+  SAFE_RELEASE(buf.codecinfo);
-+}
-+bool CLinuxRendererGLES::CreateIMXMAPTexture(int index)
-+{
-+  YV12Image &im     = m_buffers[index].image;
-+  YUVFIELDS &fields = m_buffers[index].fields;
-+  YUVPLANE  &plane  = fields[0][0];
-+
-+  DeleteEGLIMGTexture(index);
-+
-+  memset(&im    , 0, sizeof(im));
-+  memset(&fields, 0, sizeof(fields));
-+
-+  im.height = m_sourceHeight;
-+  im.width  = m_sourceWidth;
-+
-+  plane.texwidth  = 0; // Must be actual frame width for pseudo-cropping
-+  plane.texheight = 0; // Must be actual frame height for pseudo-cropping
-+  plane.pixpertex_x = 1;
-+  plane.pixpertex_y = 1;
-+
-+  glEnable(m_textureTarget);
-+  glGenTextures(1, &plane.id);
-+  VerifyGLState();
-+
-+  glBindTexture(m_textureTarget, plane.id);
-+
-+  glTexParameteri(m_textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-+  glTexParameteri(m_textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-+
-+  glDisable(m_textureTarget);
-+  return true;
-+}
-+
-+
- bool CLinuxRendererGLES::Supports(ERENDERFEATURE feature)
- {
-   // Player controls render, let it dictate available render features
-@@ -2737,5 +3010,16 @@
- }
- #endif
- 
-+void CLinuxRendererGLES::AddProcessor(CDVDVideoCodecBuffer *codecinfo, int index)
-+{
-+  YUVBUFFER &buf = m_buffers[index];
-+
-+  SAFE_RELEASE(buf.codecinfo);
-+  buf.codecinfo = codecinfo;
-+
-+  if (codecinfo)
-+    codecinfo->Lock();
-+}
-+
- #endif
- 
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.h xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.h
---- xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.h	2014-02-21 23:10:30.317096992 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/LinuxRendererGLES.h	2014-02-21 23:11:23.788122322 +0100
-@@ -33,6 +33,7 @@
- #include "guilib/GraphicContext.h"
- #include "BaseRenderer.h"
- #include "xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodec.h"
-+#include "xbmc/cores/dvdplayer/DVDCodecs/Video/DVDVideoCodecInfo.h"
- 
- class CRenderCapture;
- 
-@@ -89,7 +90,8 @@
-   RENDER_CVREF  = 0x080,
-   RENDER_BYPASS = 0x100,
-   RENDER_EGLIMG = 0x200,
--  RENDER_MEDIACODEC = 0x400
-+  RENDER_MEDIACODEC = 0x400,
-+  RENDER_IMXMAP = 0x800
- };
- 
- enum RenderQuality
-@@ -173,6 +175,7 @@
-   // mediaCodec
-   virtual void         AddProcessor(CDVDMediaCodecInfo *mediacodec, int index);
- #endif
-+  virtual void         AddProcessor(CDVDVideoCodecBuffer *codecinfo, int index);
- 
- protected:
-   virtual void Render(DWORD flags, int index);
-@@ -212,6 +215,12 @@
-   void DeleteSurfaceTexture(int index);
-   bool CreateSurfaceTexture(int index);
- 
-+  void UploadYV12BufferTexture(int index);
-+
-+  void UploadIMXMAPTexture(int index);
-+  void DeleteIMXMAPTexture(int index);
-+  bool CreateIMXMAPTexture(int index);
-+
-   void CalculateTextureSourceRects(int source, int num_planes);
- 
-   // renderers
-@@ -222,6 +231,7 @@
-   void RenderEglImage(int index, int field);       // Android OES texture
-   void RenderCoreVideoRef(int index, int field);  // CoreVideo reference
-   void RenderSurfaceTexture(int index, int field);// MediaCodec rendering using SurfaceTexture
-+  void RenderIMXMAPTexture(int index, int field); // IMXMAP rendering
- 
-   CFrameBufferObject m_fbo;
- 
-@@ -288,6 +298,7 @@
-     // mediacodec
-     CDVDMediaCodecInfo *mediacodec;
- #endif
-+    CDVDVideoCodecBuffer *codecinfo;
-   };
- 
-   typedef YUVBUFFER          YUVBUFFERS[NUM_BUFFERS];
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/RenderFormats.h xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/RenderFormats.h
---- xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/RenderFormats.h	2014-02-21 23:10:30.318096992 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/RenderFormats.h	2014-02-21 23:11:23.788122322 +0100
-@@ -37,6 +37,8 @@
-   RENDER_FMT_BYPASS,
-   RENDER_FMT_EGLIMG,
-   RENDER_FMT_MEDIACODEC,
-+  RENDER_FMT_YV12_BUFFER,
-+  RENDER_FMT_IMXMAP,
- };
- 
- #endif
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/RenderManager.cpp xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/RenderManager.cpp
---- xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/RenderManager.cpp	2014-02-21 23:10:30.318096992 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/RenderManager.cpp	2014-02-21 23:11:23.788122322 +0100
-@@ -928,6 +928,8 @@
-   else if(pic.format == RENDER_FMT_MEDIACODEC)
-     m_pRenderer->AddProcessor(pic.mediacodec, index);
- #endif
-+  else if(pic.format == RENDER_FMT_YV12_BUFFER || pic.format == RENDER_FMT_IMXMAP)
-+    m_pRenderer->AddProcessor(pic.codecinfo, index);
- 
-   m_pRenderer->ReleaseImage(index, false);
- 
-diff -Naur xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp
---- xbmc-gotham-latest.test/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp	2014-02-21 23:10:30.315096991 +0100
-+++ xbmc-imx6-koying.test/xbmc/cores/VideoRenderers/VideoShaders/YUV2RGBShader.cpp	2014-02-21 23:11:23.788122322 +0100
-@@ -39,12 +39,12 @@
- //
- // Transformation matrixes for different colorspaces.
- //
--static float yuv_coef_bt601[4][4] = 
-+static float yuv_coef_bt601[4][4] =
- {
-     { 1.0f,      1.0f,     1.0f,     0.0f },
-     { 0.0f,     -0.344f,   1.773f,   0.0f },
-     { 1.403f,   -0.714f,   0.0f,     0.0f },
--    { 0.0f,      0.0f,     0.0f,     0.0f } 
-+    { 0.0f,      0.0f,     0.0f,     0.0f }
- };
- 
- static float yuv_coef_bt709[4][4] =
-@@ -55,7 +55,7 @@
-     { 0.0f,      0.0f,     0.0f,     0.0f }
- };
- 
--static float yuv_coef_ebu[4][4] = 
-+static float yuv_coef_ebu[4][4] =
- {
-     { 1.0f,      1.0f,     1.0f,     0.0f },
-     { 0.0f,     -0.3960f,  2.029f,   0.0f },
-@@ -74,19 +74,19 @@
- static float** PickYUVConversionMatrix(unsigned flags)
- {
-   // Pick the matrix.
--   
-+
-    switch(CONF_FLAGS_YUVCOEF_MASK(flags))
-    {
-      case CONF_FLAGS_YUVCOEF_240M:
-        return (float**)yuv_coef_smtp240m; break;
-      case CONF_FLAGS_YUVCOEF_BT709:
-        return (float**)yuv_coef_bt709; break;
--     case CONF_FLAGS_YUVCOEF_BT601:    
-+     case CONF_FLAGS_YUVCOEF_BT601:
-        return (float**)yuv_coef_bt601; break;
-      case CONF_FLAGS_YUVCOEF_EBU:
-        return (float**)yuv_coef_ebu; break;
-    }
--   
-+
-    return (float**)yuv_coef_bt601;
- }
- 
-@@ -228,7 +228,7 @@
-   m_hProj   = -1;
-   m_hModel  = -1;
-   m_hAlpha  = -1;
--  if (m_format == RENDER_FMT_YUV420P)
-+  if (m_format == RENDER_FMT_YUV420P || m_format == RENDER_FMT_YV12_BUFFER)
-     m_defines += "#define XBMC_YV12\n";
-   else if (m_format == RENDER_FMT_NV12)
-     m_defines += "#define XBMC_NV12\n";
-diff -Naur xbmc-gotham-latest.test/xbmc/input/linux/LinuxInputDevices.cpp xbmc-imx6-koying.test/xbmc/input/linux/LinuxInputDevices.cpp
---- xbmc-gotham-latest.test/xbmc/input/linux/LinuxInputDevices.cpp	2014-02-21 23:10:27.131095441 +0100
-+++ xbmc-imx6-koying.test/xbmc/input/linux/LinuxInputDevices.cpp	2014-02-21 23:11:23.525122201 +0100
-@@ -1222,7 +1222,8 @@
+diff --git a/xbmc/input/linux/LinuxInputDevices.cpp b/xbmc/input/linux/LinuxInputDevices.cpp
+index 4b642ae..a1af258 100644
+--- a/xbmc/input/linux/LinuxInputDevices.cpp
++++ b/xbmc/input/linux/LinuxInputDevices.cpp
+@@ -1222,7 +1222,8 @@ XBMC_Event CLinuxInputDevices::ReadEvent()
  
      if ((now - m_lastHotplugCheck) >= 10)
      {
@@ -1878,11 +2459,31 @@ diff -Naur xbmc-gotham-latest.test/xbmc/input/linux/LinuxInputDevices.cpp xbmc-i
        m_lastHotplugCheck = now;
      }
    }
-diff -Naur xbmc-gotham-latest.test/xbmc/powermanagement/PowerManager.cpp xbmc-imx6-koying.test/xbmc/powermanagement/PowerManager.cpp
-diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-imx6-koying.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp
---- xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ xbmc-imx6-koying.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp	2014-02-21 23:11:23.780122319 +0100
-@@ -0,0 +1,300 @@
+diff --git a/xbmc/powermanagement/PowerManager.cpp b/xbmc/powermanagement/PowerManager.cpp
+index 590a887..1134085 100644
+--- a/xbmc/powermanagement/PowerManager.cpp
++++ b/xbmc/powermanagement/PowerManager.cpp
+@@ -78,13 +78,7 @@ void CPowerManager::Initialize()
+   m_instance = new CAndroidPowerSyscall();
+ #elif defined(TARGET_POSIX)
+ #if defined(HAS_DBUS)
+-  if (CConsoleUPowerSyscall::HasConsoleKitAndUPower())
+-    m_instance = new CConsoleUPowerSyscall();
+-  else if (CConsoleDeviceKitPowerSyscall::HasDeviceConsoleKit())
+-    m_instance = new CConsoleDeviceKitPowerSyscall();
+-  else if (CLogindUPowerSyscall::HasLogind())
+-    m_instance = new CLogindUPowerSyscall();
+-  else if (CUPowerSyscall::HasUPower())
++  if (CUPowerSyscall::HasUPower())
+     m_instance = new CUPowerSyscall();
+ #if defined(HAS_HAL)
+   else if(1)
+diff --git a/xbmc/windowing/egl/EGLNativeTypeIMX.cpp b/xbmc/windowing/egl/EGLNativeTypeIMX.cpp
+new file mode 100644
+index 0000000..4ffa708
+--- /dev/null
++++ b/xbmc/windowing/egl/EGLNativeTypeIMX.cpp
+@@ -0,0 +1,326 @@
 +/*
 + *      Copyright (C) 2011-2013 Team XBMC
 + *      http://www.xbmc.org
@@ -1917,8 +2518,11 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +#include "utils/Environment.h"
 +#include "guilib/gui3d.h"
 +#include "windowing/WindowingFactory.h"
++#include "cores/AudioEngine/AEFactory.h"
 +
 +CEGLNativeTypeIMX::CEGLNativeTypeIMX()
++  : m_display(NULL)
++  , m_window(NULL)
 +{
 +}
 +
@@ -1928,11 +2532,12 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +
 +bool CEGLNativeTypeIMX::CheckCompatibility()
 +{
-+  char name[256] = {0};
-+  get_sysfs_str("/sys/class/graphics/fb0/device/modalias", name, 255);
-+  CStdString strName = name;
++  std::string strName;
++  std::string str2 ("mxc_sdc_fb");
++  get_sysfs_str("/sys/class/graphics/fb0/device/modalias", strName);
 +  StringUtils::Trim(strName);
-+  if (strName == "platform:mxc_sdc_fb")
++  size_t found = strName.find(str2);
++  if (found!=std::string::npos)
 +    return true;
 +  return false;
 +}
@@ -1948,7 +2553,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +    return;
 +  }
 +
-+  // Unblank the fbs
++  // Unblank the fb
 +  if (ioctl(fd, FBIOBLANK, 0) < 0)
 +  {
 +    CLog::Log(LOGERROR, "%s - Error while unblanking fb0.\n", __FUNCTION__);
@@ -1956,6 +2561,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +
 +  close(fd);
 +
++  // Check if we can change the framebuffer resolution
 +  fd = open("/sys/class/graphics/fb0/mode", O_RDWR);
 +  if (fd >= 0)
 +  {
@@ -2005,6 +2611,9 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +
 +bool CEGLNativeTypeIMX::CreateNativeDisplay()
 +{
++  // Force double-buffering
++  CEnvironment::setenv("FB_MULTI_BUFFER", "2", 0);
++
 +  // EGL will be rendered on fb0
 +  m_display = fbGetDisplayByIndex(0);
 +  m_nativeDisplay = &m_display;
@@ -2022,6 +2631,8 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +{
 +  if (!nativeDisplay)
 +    return false;
++  if (!m_nativeDisplay)
++    return false;
 +  *nativeDisplay = (XBNativeDisplayType*)m_nativeDisplay;
 +  return true;
 +}
@@ -2030,24 +2641,32 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +{
 +  if (!nativeWindow)
 +    return false;
++  if (!m_nativeWindow || !m_window)
++    return false;
 +  *nativeWindow = (XBNativeWindowType*)m_nativeWindow;
 +  return true;
 +}
 +
 +bool CEGLNativeTypeIMX::DestroyNativeDisplay()
 +{
++  if (m_display)
++    fbDestroyDisplay(m_display);
++  m_display =  NULL;
 +  return true;
 +}
 +
 +bool CEGLNativeTypeIMX::DestroyNativeWindow()
 +{
++  if (m_window)
++    fbDestroyWindow(m_window);
++  m_window =  NULL;
 +  return true;
 +}
 +
 +bool CEGLNativeTypeIMX::GetNativeResolution(RESOLUTION_INFO *res) const
 +{
-+  char mode[256] = {0};
-+  get_sysfs_str("/sys/class/graphics/fb0/mode", mode, 255);
++  std::string mode;
++  get_sysfs_str("/sys/class/graphics/fb0/mode", mode);
 +  return ModeToResolution(mode, res);
 +}
 +
@@ -2056,9 +2675,22 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +  if (m_readonly)
 +    return false;
 +
-+  set_sysfs_str("/sys/class/graphics/fb0/blank", "1");
-+  set_sysfs_str("/sys/class/graphics/fb0/mode", res.strId.c_str());
-+  set_sysfs_str("/sys/class/graphics/fb0/blank", "0");
++  std::string mode;
++  get_sysfs_str("/sys/class/graphics/fb0/mode", mode);
++  if (res.strId == mode)
++    return false;
++
++  DestroyNativeWindow();
++  DestroyNativeDisplay();
++
++  set_sysfs_str("/sys/class/graphics/fb0/mode", res.strId);
++
++  CreateNativeDisplay();
++
++  CLog::Log(LOGDEBUG, "%s: %s",__FUNCTION__, res.strId.c_str());
++
++  // Reset AE
++  CAEFactory::DeviceChange();
 +
 +  return true;
 +}
@@ -2068,8 +2700,8 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +  if (m_readonly)
 +    return false;
 +
-+  char valstr[256] = {0};
-+  get_sysfs_str("/sys/class/graphics/fb0/modes", valstr, 255);
++  std::string valstr;
++  get_sysfs_str("/sys/class/graphics/fb0/modes", valstr);
 +  std::vector<CStdString> probe_str;
 +  StringUtils::SplitString(valstr, "\n", probe_str);
 +
@@ -2077,9 +2709,9 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +  RESOLUTION_INFO res;
 +  for (size_t i = 0; i < probe_str.size(); i++)
 +  {
-+    if(!StringUtils::StartsWith(probe_str[i], "U:")) // && !StringUtils::StartsWith(mode, "S:"))
++    if(!StringUtils::StartsWith(probe_str[i], "S:"))
 +      continue;
-+    if(ModeToResolution(probe_str[i].c_str(), &res))
++    if(ModeToResolution(probe_str[i], &res))
 +      resolutions.push_back(res);
 +  }
 +  return resolutions.size() > 0;
@@ -2092,56 +2724,51 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +
 +bool CEGLNativeTypeIMX::ShowWindow(bool show)
 +{
-+  // Force vsync depending on FB_MULTI_BUFFER
-+  EGLBoolean status;
-+  EGLint result;
-+
-+  std::string fb_buffers = CEnvironment::getenv("FB_MULTI_BUFFER");
-+  if (fb_buffers.empty())
-+    status = eglSwapInterval(g_Windowing.GetEGLDisplay(), 0);
-+  else
-+  {
-+    CLog::Log(LOGNOTICE, "%s - FB_MULTI_BUFFER is set",__FUNCTION__);
-+    status = eglSwapInterval(g_Windowing.GetEGLDisplay(), 1);
-+  }
-+  result = eglGetError();
++  // Force vsync by default
++  eglSwapInterval(g_Windowing.GetEGLDisplay(), 1);
++  EGLint result = eglGetError();
 +  if(result != EGL_SUCCESS)
 +    CLog::Log(LOGERROR, "EGL error in %s: %x",__FUNCTION__, result);
 +
 +  return false;
 +}
 +
-+int CEGLNativeTypeIMX::get_sysfs_str(const char *path, char *valstr, const int size) const
++int CEGLNativeTypeIMX::get_sysfs_str(std::string path, std::string& valstr) const
 +{
-+  int fd = open(path, O_RDONLY);
++  int len;
++  char buf[256] = {0};
++
++  int fd = open(path.c_str(), O_RDONLY);
 +  if (fd >= 0)
 +  {
-+    int len = read(fd, valstr, size - 1);
-+    if (len != -1 )
-+      valstr[len] = '\0';
++    while ((len = read(fd, buf, 255)) > 0)
++      valstr.append(buf, len);
 +    close(fd);
 +  }
 +  else
 +  {
-+    sprintf(valstr, "%s", "fail");
++    CLog::Log(LOGERROR, "%s: error reading %s",__FUNCTION__, path.c_str());
++    valstr = "fail";
 +    return -1;
 +  }
 +  return 0;
 +}
 +
-+int CEGLNativeTypeIMX::set_sysfs_str(const char *path, const char *val)
++int CEGLNativeTypeIMX::set_sysfs_str(std::string path, std::string val) const
 +{
-+  int fd = open(path, O_RDWR);
++  int fd = open(path.c_str(), O_WRONLY);
 +  if (fd >= 0)
 +  {
-+    write(fd, val, strlen(val));
++    val += '\n';
++    write(fd, val.c_str(), val.size());
 +    close(fd);
 +    return 0;
 +  }
++  CLog::Log(LOGERROR, "%s: error writing %s",__FUNCTION__, path.c_str());
 +  return -1;
 +}
 +
-+bool CEGLNativeTypeIMX::ModeToResolution(const char *mode, RESOLUTION_INFO *res) const
++bool CEGLNativeTypeIMX::ModeToResolution(std::string mode, RESOLUTION_INFO *res) const
 +{
 +  if (!res)
 +    return false;
@@ -2149,7 +2776,7 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +  res->iWidth = 0;
 +  res->iHeight= 0;
 +
-+  if(!mode)
++  if(mode.empty())
 +    return false;
 +
 +  std::string fromMode = StringUtils::Mid(mode, 2);
@@ -2183,9 +2810,11 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.cpp xbmc-
 +  return res->iWidth > 0 && res->iHeight> 0;
 +}
 +
-diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.h xbmc-imx6-koying.test/xbmc/windowing/egl/EGLNativeTypeIMX.h
---- xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.h	1970-01-01 01:00:00.000000000 +0100
-+++ xbmc-imx6-koying.test/xbmc/windowing/egl/EGLNativeTypeIMX.h	2014-02-21 23:11:23.780122319 +0100
+diff --git a/xbmc/windowing/egl/EGLNativeTypeIMX.h b/xbmc/windowing/egl/EGLNativeTypeIMX.h
+new file mode 100644
+index 0000000..df7b3b7
+--- /dev/null
++++ b/xbmc/windowing/egl/EGLNativeTypeIMX.h
 @@ -0,0 +1,60 @@
 +#pragma once
 +
@@ -2237,19 +2866,20 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLNativeTypeIMX.h xbmc-im
 +  virtual bool  GetPreferredResolution(RESOLUTION_INFO *res) const;
 +
 +  virtual bool  ShowWindow(bool show);
-+  
++
 +protected:
 +  bool m_readonly;
-+  int get_sysfs_str(const char *path, char *valstr, const int size) const;
-+  int set_sysfs_str(const char *path, const char *val);
-+  bool ModeToResolution(const char *mode, RESOLUTION_INFO *res) const;
-+  
++  int get_sysfs_str(std::string path, std::string& valstr) const;
++  int set_sysfs_str(std::string path, std::string val) const;
++  bool ModeToResolution(std::string mode, RESOLUTION_INFO *res) const;
++
 +  EGLNativeDisplayType m_display;
 +  EGLNativeWindowType  m_window;
 +};
-diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLWrapper.cpp xbmc-imx6-koying.test/xbmc/windowing/egl/EGLWrapper.cpp
---- xbmc-gotham-latest.test/xbmc/windowing/egl/EGLWrapper.cpp	2014-02-21 23:10:29.976096826 +0100
-+++ xbmc-imx6-koying.test/xbmc/windowing/egl/EGLWrapper.cpp	2014-02-21 23:11:23.780122319 +0100
+diff --git a/xbmc/windowing/egl/EGLWrapper.cpp b/xbmc/windowing/egl/EGLWrapper.cpp
+index 045cdfc..4d74be5 100644
+--- a/xbmc/windowing/egl/EGLWrapper.cpp
++++ b/xbmc/windowing/egl/EGLWrapper.cpp
 @@ -17,16 +17,17 @@
   *  <http://www.gnu.org/licenses/>.
   *
@@ -2270,27 +2900,28 @@ diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/EGLWrapper.cpp xbmc-imx6-k
  #include "EGLWrapper.h"
  
  #define CheckError() m_result = eglGetError(); if(m_result != EGL_SUCCESS) CLog::Log(LOGERROR, "EGL error in %s: %x",__FUNCTION__, m_result);
-@@ -83,7 +84,11 @@
+@@ -83,7 +84,11 @@ bool CEGLWrapper::Initialize(const std::string &implementation)
    if ((nativeGuess = CreateEGLNativeType<CEGLNativeTypeWayland>(implementation)) ||
        (nativeGuess = CreateEGLNativeType<CEGLNativeTypeAndroid>(implementation)) ||
        (nativeGuess = CreateEGLNativeType<CEGLNativeTypeAmlogic>(implementation)) ||
 -      (nativeGuess = CreateEGLNativeType<CEGLNativeTypeRaspberryPI>(implementation)))
 +      (nativeGuess = CreateEGLNativeType<CEGLNativeTypeRaspberryPI>(implementation))
-+#ifdef HAS_IMXVPU
++#ifdef HAS_IMXFB
 +      || (nativeGuess = CreateEGLNativeType<CEGLNativeTypeIMX>(implementation))
 +#endif
 +      )
    {
      m_nativeTypes = nativeGuess;
  
-diff -Naur xbmc-gotham-latest.test/xbmc/windowing/egl/Makefile.in xbmc-imx6-koying.test/xbmc/windowing/egl/Makefile.in
---- xbmc-gotham-latest.test/xbmc/windowing/egl/Makefile.in	2014-02-21 23:10:29.933096805 +0100
-+++ xbmc-imx6-koying.test/xbmc/windowing/egl/Makefile.in	2014-02-21 23:11:23.779122318 +0100
-@@ -24,6 +24,10 @@
+diff --git a/xbmc/windowing/egl/Makefile.in b/xbmc/windowing/egl/Makefile.in
+index f800b7f..ec84c1d 100644
+--- a/xbmc/windowing/egl/Makefile.in
++++ b/xbmc/windowing/egl/Makefile.in
+@@ -24,6 +24,10 @@ SRCS+= wayland/Callback.cpp \
         wayland/XBMCSurface.cpp
  endif
  
-+ifeq (@USE_IMXVPU@,1)
++ifeq (@USE_IMXFB@,1)
 +SRCS+= EGLNativeTypeIMX.cpp
 +endif
 +
