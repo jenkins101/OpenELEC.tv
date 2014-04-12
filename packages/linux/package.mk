@@ -19,8 +19,8 @@
 PKG_NAME="linux"
 case "$LINUX" in
   imx6)
-    PKG_VERSION="imx_3.0.35_4.1.0-5c73417"
-    PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+    PKG_VERSION="linaro-stable-mx6-linux-linaro-lsk-mx6"
+    PKG_URL="http://calsifer.dyndns.org/$PKG_NAME-$PKG_VERSION.tar.gz"
     ;;
   3.13)
     PKG_VERSION="3.13.7"
