@@ -17,12 +17,12 @@
 ################################################################################
 
 PKG_NAME="gpu-viv-bin-mx6q"
-PKG_VERSION="3.5.7-1.0.0"
+PKG_VERSION="3.10.9-1.0.0"
 PKG_REV="1"
 PKG_ARCH="arm"
 PKG_LICENSE="nonfree"
 PKG_SITE="http://www.freescale.com"
-PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_URL="http://repository.timesys.com/buildsources/g/$PKG_NAME/$PKG_NAME-$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="graphics"
