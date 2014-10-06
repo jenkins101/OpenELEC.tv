@@ -24,9 +24,8 @@ fi
 [ "$DEBUG" = "yes" ] && EXTRA="-d $EXTRA"
 
 echo "Found chip $chip."
-modprobe hci_uart
-sleep 2
 /usr/bin/brcm_patchram_plus --patchram /lib/firmware/brcm/$HCD --baudrate 3000000 --use_baudrate_for_download /dev/ttymxc3 --enable_hci $EXTRA &
+modprobe hci_uart
 
 for i in 1 2 3 4 5 ; do
   b=`hciconfig | grep UART | cut -d: -f1`
