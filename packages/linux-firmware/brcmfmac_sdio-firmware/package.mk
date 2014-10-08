@@ -16,7 +16,7 @@
 #  along with OpenELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-PKG_NAME="brcm-patchram-plus"
+PKG_NAME="brcmfmac_sdio-firmware"
 PKG_VERSION="0.1"
 PKG_REV="1"
 PKG_ARCH="any"
@@ -25,15 +25,16 @@ PKG_SITE="http://calsifer.dyndns.org"
 PKG_URL="http://calsifer.dyndns.org/$PKG_NAME-$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
-PKG_SECTION="network"
-PKG_SHORTDESC="brcm-patchram-plus:"
-PKG_LONGDESC="Downloads a patchram files in the HCD format to Broadcom Bluetooth based silicon and combo chips and other utility functions."
+PKG_SECTION="firmware"
+PKG_SHORTDESC="brcmfmac_sdio-firmware: firmware for brcm bluetooth devices"
+PKG_LONGDESC="Firmware for Broadcom Bluetooth devices and brcm-patchram-plus that downloads a patchram files in the HCD format to the Bluetooth based silicon and combo chips and other utility functions."
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 post_install() {
-  cp -PRv $PKG_DIR/scripts/start-brcm-patchram-plus $INSTALL/usr/bin/
-  enable_service brcm-patchram-plus.service
+  mkdir -p $INSTALL/usr/lib/systemd/scripts
+  cp -PRv $PKG_DIR/scripts/brcmfmac_sdio-firmware-update $INSTALL/usr/lib/systemd/scripts/
+#  enable_service brcm-patchram-plus.service
 }
 
